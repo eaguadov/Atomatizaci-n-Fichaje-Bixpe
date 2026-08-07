@@ -21,44 +21,44 @@ jobs:
           playwright install chromium
 
       # 1. START
-      - name: TEST Start (Force)
+      - name: TEST Start (Simulation)
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
-        run: python src/bixpe_bot.py --action START --force
+        run: python src/bixpe_bot.py --action START --force --simulate
 
       # Wait 5s
       - name: Wait 5 seconds
         run: sleep 5
 
       # 2. PAUSE
-      - name: TEST Pause (Force)
+      - name: TEST Pause (Simulation)
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
-        run: python src/bixpe_bot.py --action PAUSE --force
+        run: python src/bixpe_bot.py --action PAUSE --force --simulate
 
       # Wait 5s
       - name: Wait 5 seconds
         run: sleep 5
 
       # 3. RESUME
-      - name: TEST Resume (Force)
+      - name: TEST Resume (Simulation)
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
-        run: python src/bixpe_bot.py --action RESUME --force
+        run: python src/bixpe_bot.py --action RESUME --force --simulate
 
       # Wait 5s
       - name: Wait 5 seconds
         run: sleep 5
 
       # 4. END
-      - name: TEST End (Force)
+      - name: TEST End (Simulation)
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
-        run: python src/bixpe_bot.py --action END --force
+        run: python src/bixpe_bot.py --action END --force --simulate
 
       # Upload all screenshots and generic debug files
       - name: Upload Screenshots
