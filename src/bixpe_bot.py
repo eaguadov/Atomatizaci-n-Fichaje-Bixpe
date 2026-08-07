@@ -385,6 +385,13 @@ def run_automation(email, password, action, headless=True, dry_run=False):
                 print("No confirmation dialog found (or not needed).")
         except Exception as e:
             print(f"Confirmation check error: {e}")
+            page.screenshot(path=f"error_confirm_{action}_{time.strftime('%Y%m%d_%H%M%S')}.png")
+            try:
+                browser.close()
+            except:
+                pass
+            p.stop()
+            sys.exit(1)
     else:
         print(f"Action {action} requires no confirmation interaction.")
 
@@ -467,5 +474,9 @@ if __name__ == "__main__":
         print("Error: BIXPE_EMAIL and BIXPE_PASSWORD environment variables must be set.")
         sys.exit(1)
 
-    run_automation(email, password, args.action, headless=not args.visible, dry_run=is_simulation)
+    try:
+        run_automation(email, password, args.action, headless=not args.visible, dry_run=is_simulation)
+    except Exception as e:
+        print(f"Error fatal inesperado en la automatización: {e}")
+        sys.exit(1)
 
