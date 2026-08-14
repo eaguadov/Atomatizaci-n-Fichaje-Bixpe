@@ -1,144 +1,131 @@
-# Guía de Configuración - Automatización Fichaje Bixpe
+# Guía de Configuración Completa - Automatización Fichaje Bixpe v2.0.0
 
-Esta guía te permitirá configurar tu propia automatización de fichaje en Bixpe.
-
----
-
-## Requisitos previos
-
-- Cuenta en Bixpe Control Horario (con email y contraseña)
-- Cuenta de email para registros
+Esta guía te permitirá configurar tu propia automatización de fichaje en Bixpe con el **sistema dual de alertas en tiempo real por Telegram y Correo Electrónico (Gmail SMTP)**.
 
 ---
 
-## Paso 1: Crear cuenta en GitHub
+## 📋 Requisitos Previos
 
-1. Ve a https://github.com/signup
-2. Completa el registro con tu email
-3. Verifica tu email
+- Cuenta activa en **Bixpe Control Horario** (email y contraseña).
+- Cuenta de **GitHub** (gratuita).
+- Cuenta de **Telegram** (para recibir alertas instantáneas).
+- Cuenta de **Gmail** con Verificación en dos pasos (para recibir notificaciones por correo).
+- Cuenta en **cron-job.org** (gratuita, para disparar los fichajes puntualmente).
 
 ---
 
-## Paso 2: Hacer Fork del repositorio
+## 🚀 Paso 1: Crear cuenta y hacer Fork en GitHub
 
-1. Ve a: https://github.com/eaguadov/Atomatizaci-n-Fichaje-Bixpe
-2. Click en el botón **"Fork"** (arriba a la derecha)
-3. En la pantalla de fork, mantén el nombre por defecto
-4. Click **"Create fork"**
+1. Entra en [https://github.com/signup](https://github.com/signup) y crea tu cuenta.
+2. Ve al repositorio principal: [https://github.com/eaguadov/Atomatizaci-n-Fichaje-Bixpe](https://github.com/eaguadov/Atomatizaci-n-Fichaje-Bixpe).
+3. Haz clic en el botón **"Fork"** (arriba a la derecha).
+4. Mantén el nombre y pulsa **"Create fork"**.
 
 Ahora tienes tu propia copia en: `https://github.com/TU_USUARIO/Atomatizaci-n-Fichaje-Bixpe`
 
-> ✅ **BUENA NOTICIA**: El código es genérico, NO necesitas modificar ningún archivo. 
-> 
-> ⚠️ **ÚNICO CAMBIO NECESARIO**: En el **Paso 6** (cron-job.org), deberás poner TU usuario de GitHub en la URL de los cron jobs.
+---
 
+## 🔑 Paso 2: Configurar los 7 Secrets en GitHub
+
+Los *Secrets* almacenan tus credenciales e integraciones de forma segura.
+
+1. Ve a tu fork: `https://github.com/TU_USUARIO/Atomatizaci-n-Fichaje-Bixpe`.
+2. Haz clic en **Settings** → **Secrets and variables** → **Actions**.
+3. Haz clic en **"New repository secret"** para cada uno de los 7 secretos listados a continuación:
+
+### Tabla de Secrets de GitHub Actions
+
+| Nombre del Secret | Descripción | Ejemplo / Formato |
+|-------------------|-------------|-------------------|
+| `BIXPE_EMAIL` | Tu correo electrónico de acceso a Bixpe | `usuario@empresa.com` |
+| `BIXPE_PASSWORD` | Tu contraseña de Bixpe | `MiPassword123` |
+| `TELEGRAM_TOKEN` | Token del Bot creado con BotFather | `123456789:ABCdefGHIjklMNOpqrs` |
+| `TELEGRAM_CHAT_ID` | Tu ID numérico de chat de Telegram | `987654321` |
+| `EMAIL_SENDER` | Dirección de Gmail desde la que se enviará el correo | `tu_correo@gmail.com` |
+| `EMAIL_PASSWORD` | Contraseña de Aplicación de 16 letras de Google | `abcd efgh ijkl mnop` |
+| `EMAIL_RECIPIENT` | Dirección de correo donde quieres recibir los avisos | `tu_correo@gmail.com` |
 
 ---
 
-## Paso 3: Configurar Secrets en GitHub
+## 📲 Paso 3: Configuración de Notificaciones por Telegram
 
-Los secrets almacenan tus credenciales de forma segura.
+Sigue estos 3 sencillos pasos para crear tu Bot y vincularlo:
 
-1. Ve a tu fork: `https://github.com/TU_USUARIO/Atomatizaci-n-Fichaje-Bixpe`
-2. Click en **Settings** (pestaña superior)
-3. Menú izquierdo: **Secrets and variables** → **Actions**
-4. Click **"New repository secret"**
+### 3.1. Crear el Bot en Telegram
+1. En Telegram, busca al usuario oficial verificado **`@BotFather`** e inicia el chat.
+2. Envía el comando `/newbot`.
+3. Asignale un nombre y un nombre de usuario (debe terminar en `bot`, ej: `MiFichajeBixpe_bot`).
+4. **Copia el Token** que te proporciona BotFather (ej: `123456789:ABC...`). Este es tu **`TELEGRAM_TOKEN`**.
 
-### Secrets a crear:
+### 3.2. Obtener tu Chat ID (Método seguro)
+1. Busca al bot **`@MissRose_bot`** e inicia el chat.
+2. Envía el comando `/id`.
+3. **Copia el número que te devuelve** (ej: `987654321`). Este es tu **`TELEGRAM_CHAT_ID`**.
+4. **IMPORTANTE**: Busca tu propio bot recién creado (ej: `@MiFichajeBixpe_bot`) y envíale un mensaje inicial (ej: `Hola`) para registrar la interacción y permitirle enviarte avisos.
 
-| Name | Value |
-|------|-------|
-| `BIXPE_EMAIL` | Tu email de Bixpe |
-| `BIXPE_PASSWORD` | Tu contraseña de Bixpe |
-
----
-
-## Paso 4: Crear Personal Access Token (PAT)
-
-El token permite a cron-job.org disparar tus workflows.
-
-1. Ve a: https://github.com/settings/tokens
-2. Click **"Generate new token"** → **"Generate new token (classic)"**
-3. Configura:
-   - **Note**: `cron-job-bixpe`
-   - **Expiration**: `No expiration` o `1 year`
-   - **Select scopes**: Marca solo ✅ **repo**
-4. Click **"Generate token"**
-5. **COPIA EL TOKEN** (empieza con `ghp_...`)
-
-> ⚠️ El token solo se muestra UNA vez. Guárdalo en un lugar seguro.
+### 3.3. Guardar los Secretos en GitHub
+Añade `TELEGRAM_TOKEN` y `TELEGRAM_CHAT_ID` en la sección **Settings > Secrets and variables > Actions** de tu repositorio.
 
 ---
 
-## Paso 5: Crear cuenta en cron-job.org
+## 📧 Paso 4: Configuración de Notificaciones por Email (Gmail SMTP)
 
-1. Ve a: https://cron-job.org/en/signup/
-2. Regístrate con tu email
-3. Confirma tu cuenta
+Para que Gmail permita enviar correos automáticos por el puerto seguro 587 (SMTP `starttls`), debes generar una contraseña de aplicación:
 
----
+### 4.1. Generar la Contraseña de Aplicación en Google
+1. Inicia sesión en tu cuenta de Google (debe tener la **Verificación en dos pasos** activada).
+2. Accede directamente al panel de contraseñas de aplicaciones de Google: [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+3. Escribe un nombre identificativo (por ejemplo: `GitHub Bixpe Bot`) y pulsa en **Crear**.
+4. **Copia el código de 16 letras** que aparecerá en pantalla (ej: `abcd efgh ijkl mnop`).
 
-## Paso 6: Configurar los Cron Jobs
-
-Crea **6 jobs** en cron-job.org con la siguiente configuración.
-
-### Configuración común para TODOS los jobs:
-
-**En la pestaña ADVANCED:**
-
-| Campo | Valor |
-|-------|-------|
-| **Request Method** | `POST` |
-| **Timeout** | `30` segundos |
-
-**Headers (añadir los 3):**
-
-| Key | Value |
-|-----|-------|
-| `Authorization` | `Bearer TU_TOKEN_AQUI` |
-| `Accept` | `application/vnd.github.v3+json` |
-| `Content-Type` | `application/json` |
-
-> ⚠️ Sustituye `TU_TOKEN_AQUI` por el token que copiaste en el Paso 4.
+### 4.2. Guardar los Secrets en GitHub
+Añade en **Settings > Secrets and variables > Actions** de GitHub:
+- `EMAIL_SENDER`: Tu dirección de Gmail.
+- `EMAIL_PASSWORD`: Las 16 letras de la contraseña de aplicación sin espacios.
+- `EMAIL_RECIPIENT`: La dirección de correo donde quieres recibir las alertas.
 
 ---
 
-### Los 6 Jobs a crear:
+## ⏰ Paso 5: Configurar los Cron Jobs en cron-job.org
 
-**URL para todos** (sustituye `TU_USUARIO`):
-```
+Para que el fichaje se ejecute con máxima puntualidad (~1 minuto de precisión), se utiliza [cron-job.org](https://cron-job.org).
+
+### 5.1. Crear Personal Access Token (PAT) en GitHub
+1. Ve a: [https://github.com/settings/tokens](https://github.com/settings/tokens).
+2. Haz clic en **Generate new token (classic)**.
+3. Nombre: `cron-job-bixpe`. Marca solo el scope **`repo`**.
+4. Copia el token generado (`ghp_...`).
+
+### 5.2. Configuración en cron-job.org
+Crea **6 jobs** en cron-job.org apuntando a la URL de tu repositorio:
+```text
 https://api.github.com/repos/TU_USUARIO/Atomatizaci-n-Fichaje-Bixpe/dispatches
 ```
 
-| Job | Días | Hora | Request Body |
-|-----|------|------|--------------|
-| Clock In (L-J) | Mon, Tue, Wed, Thu | 08:30 | `{"event_type": "clock_in"}` |
-| Clock In (V) | Fri | 08:00 | `{"event_type": "clock_in"}` |
-| Break Start | Mon, Tue, Wed, Thu | 14:00 | `{"event_type": "break_start"}` |
-| Break End | Mon, Tue, Wed, Thu | 15:00 | `{"event_type": "break_end"}` |
-| Clock Out (L-J) | Mon, Tue, Wed, Thu | 18:00 | `{"event_type": "clock_out"}` |
-| Clock Out (V) | Fri | 14:00 | `{"event_type": "clock_out"}` |
+**Configuración común (Pestaña ADVANCED):**
+- **Request Method**: `POST`
+- **Headers**:
+  - `Authorization`: `Bearer ghp_TU_TOKEN_PAT`
+  - `Accept`: `application/vnd.github.v3+json`
+  - `Content-Type`: `application/json`
 
-### Cómo crear cada job:
+**Los 6 Jobs a crear:**
 
-1. Click **"CREATE CRONJOB"**
-2. **Title**: Nombre del job (ej: "Clock In L-J")
-3. **URL**: Pega la URL de arriba (con TU_USUARIO)
-4. **Schedule**: Selecciona "Custom" y configura días/hora
-5. Ve a pestaña **ADVANCED**
-6. Configura Request Method, Headers y Request Body
-7. Click **"CREATE"**
-8. **Asegúrate de que el job esté ENABLED** (habilitado)
+| Job | Días | Hora | Body JSON |
+|-----|------|------|-----------|
+| Clock In (L-J) | Lun, Mar, Mié, Jue | 08:30 | `{"event_type": "clock_in"}` |
+| Clock In (V) | Vie | 08:00 | `{"event_type": "clock_in"}` |
+| Break Start (L-J) | Lun, Mar, Mié, Jue | 14:00 | `{"event_type": "break_start"}` |
+| Break End (L-J) | Lun, Mar, Mié, Jue | 15:00 | `{"event_type": "break_end"}` |
+| Clock Out (L-J) | Lun, Mar, Mié, Jue | 18:00 | `{"event_type": "clock_out"}` |
+| Clock Out (V) | Vie | 14:00 | `{"event_type": "clock_out"}` |
 
 ---
 
-## Paso 7: Gestionar vacaciones y festivos
+## 🌴 Paso 6: Gestión de Vacaciones y Festivos
 
-Edita el archivo `holidays.json` en tu fork:
-
-1. Ve a: `https://github.com/TU_USUARIO/Atomatizaci-n-Fichaje-Bixpe/blob/main/holidays.json`
-2. Click en el icono de lápiz ✏️ (Edit)
-3. Añade tus fechas de vacaciones:
+### Días de Vacaciones / Festivos Locales (`holidays.json`)
+Edita el archivo `holidays.json` en tu fork para incluir las fechas donde NO deseas fichar:
 
 ```json
 [
@@ -150,73 +137,29 @@ Edita el archivo `holidays.json` en tu fork:
 ]
 ```
 
-4. Click **"Commit changes"**
-
-> Los días en esta lista NO se fichará automáticamente.
-
----
-
-## Paso 8: Verificar que funciona
-
-### Test manual:
-1. En cron-job.org, entra en uno de tus jobs
-2. Click **"TEST RUN"**
-3. Debería mostrar **"204 No Content"** = ✅ Éxito
-
-### Verificar en GitHub:
-1. Ve a: `https://github.com/TU_USUARIO/Atomatizaci-n-Fichaje-Bixpe/actions`
-2. Deberías ver el workflow ejecutándose
+### Vacaciones Registradas en la Web de Bixpe
+Si estás de vacaciones y Bixpe muestra el mensaje *"Vacaciones en curso"*, el bot lo detecta automáticamente, omite el fichaje sin dar error y te envía una notificación de tranquilidad: `🌴 Fichaje Bixpe Omitido (Vacaciones)`.
 
 ---
 
-## Resumen de datos importantes
+## 🧪 Paso 7: Pruebas Manuales y Simulación de Errores
 
-### URLs a personalizar:
+Puedes realizar pruebas manuales directamente desde la interfaz web de GitHub Actions:
 
-| Uso | URL (sustituye TU_USUARIO) |
-|-----|----------------------------|
-| Tu fork | `https://github.com/TU_USUARIO/Atomatizaci-n-Fichaje-Bixpe` |
-| Secrets | `https://github.com/TU_USUARIO/Atomatizaci-n-Fichaje-Bixpe/settings/secrets/actions` |
-| Actions | `https://github.com/TU_USUARIO/Atomatizaci-n-Fichaje-Bixpe/actions` |
-| API Dispatch | `https://api.github.com/repos/TU_USUARIO/Atomatizaci-n-Fichaje-Bixpe/dispatches` |
-
-### Secrets de GitHub:
-
-| Secret | Valor |
-|--------|-------|
-| `BIXPE_EMAIL` | Tu email de Bixpe |
-| `BIXPE_PASSWORD` | Tu contraseña de Bixpe |
-
-### Headers para cron-job.org:
-
-| Header | Valor |
-|--------|-------|
-| `Authorization` | `Bearer ghp_xxxxxxxxxxxx` (tu token) |
-| `Accept` | `application/vnd.github.v3+json` |
-| `Content-Type` | `application/json` |
-
-### Horarios de fichaje:
-
-| Acción | Lunes-Jueves | Viernes |
-|--------|--------------|---------|
-| Entrada | 08:30 | 08:00 |
-| Inicio pausa | 14:00 | - |
-| Fin pausa | 15:00 | - |
-| Salida | 18:00 | 14:00 |
+1. Ve a la pestaña **Actions** en tu repositorio.
+2. Selecciona **`TEST Full Cycle (Manual)`**.
+3. Haz clic en **Run workflow**, elige la rama `main` y selecciona el **Modo de prueba**:
+   - 🟢 `full_cycle`: Fichaje real (Entrada -> Pausa -> Fin Pausa -> Salida).
+   - 🔴 `wrong_password`: Simula contraseña incorrecta para verificar la alerta de error.
+   - 🔴 `wrong_url`: Simula fallo de red / servidor no disponible.
+   - 🔴 `missing_button`: Simula cambio de interfaz o botón no encontrado.
 
 ---
 
-## Solución de problemas
+## ❓ Solución de Problemas Frecuentes
 
-| Problema | Solución |
-|----------|----------|
-| Error 401 Unauthorized | Revisa que el token esté correcto en Authorization |
-| Error 404 Not Found | Revisa que la URL tenga TU_USUARIO correcto |
-| Job no se ejecuta | Verifica que el job esté ENABLED en cron-job.org |
-| Workflow falla | Revisa los secrets en GitHub (BIXPE_EMAIL, BIXPE_PASSWORD) |
-
----
-
-## Contacto
-
-Si tienes problemas, contacta con el administrador del proyecto original.
+| Síntoma | Causa Probable | Solución |
+|---------|----------------|----------|
+| Telegram no recibe mensajes | `TELEGRAM_TOKEN` o `CHAT_ID` mal puestos o bot no saludado | Revisa los secrets y asegúrate de haber enviado un `/start` o saludo a tu bot en Telegram. |
+| Email da error `535 Bad Credentials` | Se introdujo la contraseña habitual de Gmail en lugar de la Contraseña de Aplicación | Genera una contraseña de aplicación de 16 letras en [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords). |
+| Error 401 en cron-job.org | Token PAT de GitHub caducado o mal copiado | Revisa la cabecera `Authorization: Bearer ghp_...` en cron-job.org. |
