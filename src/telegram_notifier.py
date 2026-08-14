@@ -8,7 +8,7 @@ from email.mime.multipart import MIMEMultipart
 def send_telegram_message(message_text):
     """
     Sends a Markdown-formatted message to Telegram using TELEGRAM_TOKEN and TELEGRAM_CHAT_ID.
-    Uses standard urllib to avoid extra package dependencies.
+    Includes automatic fallback to plain text if Telegram rejects Markdown formatting.
     """
     token = os.environ.get("TELEGRAM_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
@@ -30,6 +30,23 @@ def send_telegram_message(message_text):
             if response.status == 200:
                 print("[Telegram Notifier] Notificación enviada con éxito a Telegram.")
                 return True
+    except urllib.error.HTTPError as he:
+        print(f"[Telegram Notifier] Error HTTP al enviar Markdown ({he.code}). Reintentando como texto plano...")
+        # Fallback to plain text if Telegram rejects special Markdown characters like _
+        plain_text = message_text.replace("*", "").replace("`", "")
+        fallback_payload = urllib.parse.urlencode({
+            "chat_id": chat_id,
+            "text": plain_text
+        }).encode("utf-8")
+        try:
+            req_fb = urllib.request.Request(url, data=fallback_payload)
+            with urllib.request.urlopen(req_fb, timeout=10) as resp_fb:
+                if resp_fb.status == 200:
+                    print("[Telegram Notifier] Notificación enviada con éxito como texto plano.")
+                    return True
+        except Exception as e_fb:
+            print(f"[Telegram Notifier] Error al enviar notificación fallback a Telegram: {e_fb}")
+            return False
     except Exception as e:
         print(f"[Telegram Notifier] Error al enviar notificación a Telegram: {e}")
         return False

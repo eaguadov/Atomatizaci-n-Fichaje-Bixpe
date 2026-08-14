@@ -96,9 +96,13 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
         try:
             page.goto(target_url, timeout=30000)
         except Exception as ne:
-            print(f"Error cargando la página web ({target_url}): {ne}")
-            notify_error(action, f"No se pudo cargar la web de Bixpe ({target_url}): {ne}")
-            page.screenshot(path="error_navigation.png")
+            clean_err = str(ne).split("\n")[0]
+            print(f"Error cargando la página web ({target_url}): {clean_err}")
+            notify_error(action, f"No se pudo cargar la web de Bixpe ({target_url}): {clean_err}")
+            try:
+                page.screenshot(path="error_navigation.png")
+            except:
+                pass
             browser.close()
             p.stop()
             sys.exit(1)
