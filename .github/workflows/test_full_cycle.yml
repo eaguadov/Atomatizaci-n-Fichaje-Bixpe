@@ -35,7 +35,7 @@ jobs:
       # -----------------------------------------------------------------
       # MODO 1: CICLO COMPLETO NORMAL (START -> PAUSE -> RESUME -> END)
       # -----------------------------------------------------------------
-      - name: TEST Start (Simulation)
+      - name: TEST Start
         if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
@@ -45,13 +45,13 @@ jobs:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
-        run: python src/bixpe_bot.py --action START --force --simulate
+        run: python src/bixpe_bot.py --action START --force
 
       - name: Wait 5 seconds
         if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         run: sleep 5
 
-      - name: TEST Pause (Simulation)
+      - name: TEST Pause
         if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
@@ -61,13 +61,13 @@ jobs:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
-        run: python src/bixpe_bot.py --action PAUSE --force --simulate
+        run: python src/bixpe_bot.py --action PAUSE --force
 
       - name: Wait 5 seconds
         if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         run: sleep 5
 
-      - name: TEST Resume (Simulation)
+      - name: TEST Resume
         if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
@@ -77,13 +77,13 @@ jobs:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
-        run: python src/bixpe_bot.py --action RESUME --force --simulate
+        run: python src/bixpe_bot.py --action RESUME --force
 
       - name: Wait 5 seconds
         if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         run: sleep 5
 
-      - name: TEST End (Simulation)
+      - name: TEST End
         if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
@@ -93,7 +93,7 @@ jobs:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
-        run: python src/bixpe_bot.py --action END --force --simulate
+        run: python src/bixpe_bot.py --action END --force
 
       # -----------------------------------------------------------------
       # MODO 2: ERROR DE CONTRASEÑA INCORRECTA
