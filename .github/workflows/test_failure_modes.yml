@@ -38,6 +38,9 @@ jobs:
           BIXPE_PASSWORD: "contrasena_falsa_de_prueba_123"
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
         run: python src/bixpe_bot.py --action START --force
 
       # Modo de Error 2: URL errónea de Bixpe
@@ -48,6 +51,9 @@ jobs:
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
         run: python src/bixpe_bot.py --action START --force --url "https://url-inexistente-bixpe-falsa.com/"
 
       - name: Upload Debug Files
