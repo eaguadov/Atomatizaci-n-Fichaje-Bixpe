@@ -180,6 +180,13 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
             # Explicit safety sleep to prevent crashes on dynamic loads
             print("Sleeping 10s (via Playwright) to ensure dashboard stability...")
             page.wait_for_timeout(10000)
+
+            # Extra safety check: Try waiting for redirection to worktime.bixpe.com
+            try:
+                page.wait_for_url(lambda u: "auth2.bixpe.com" not in u.lower(), timeout=5000)
+            except:
+                pass # If timeout occurs, page.url check below will handle login failure safely
+
             print("Login wait finished. Checking URL...")
             print(f"Post-login URL: {page.url}")
 
