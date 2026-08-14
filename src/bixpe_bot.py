@@ -183,6 +183,15 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
             print("Login wait finished. Checking URL...")
             print(f"Post-login URL: {page.url}")
 
+            # Check if login failed (URL still on login page)
+            if "account/login" in page.url.lower() or "auth2.bixpe.com" in page.url.lower():
+                print("❌ [BIXPE] Error de autenticación: El inicio de sesión falló.")
+                page.screenshot(path="error_login_failed.png")
+                notify_error(action, "Error durante inicio de sesión en Bixpe: Usuario o contraseña incorrectos.")
+                browser.close()
+                p.stop()
+                sys.exit(1)
+
             # Check if Bixpe displays "Vacaciones en curso" on dashboard
             try:
                 body_content = page.content().lower()
@@ -297,8 +306,10 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
             print(f"Could not save HTML dump: {e}")
             
         page.screenshot(path=f"error_no_btn_{action}.png")
-        if not dry_run:
-             sys.exit(1)
+        notify_error(action, f"No se encontró el botón para {action} en la pantalla de Bixpe.")
+        browser.close()
+        p.stop()
+        sys.exit(1)
 
     # ---------------------------------------------------------
     # DIAGNOSTIC CHECKLIST (Per User Request)
