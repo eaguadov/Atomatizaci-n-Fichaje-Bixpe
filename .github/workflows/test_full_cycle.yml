@@ -25,6 +25,8 @@ jobs:
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python src/bixpe_bot.py --action START --force --simulate
 
       # Wait 5s
@@ -36,6 +38,8 @@ jobs:
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python src/bixpe_bot.py --action PAUSE --force --simulate
 
       # Wait 5s
@@ -47,6 +51,8 @@ jobs:
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python src/bixpe_bot.py --action RESUME --force --simulate
 
       # Wait 5s
@@ -58,6 +64,8 @@ jobs:
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python src/bixpe_bot.py --action END --force --simulate
 
       # Upload all screenshots and generic debug files
