@@ -60,7 +60,7 @@ def is_holiday_or_weekend(holidays):
         
     return False
 
-def run_automation(email, password, action, headless=True, dry_run=False, target_url="https://worktime.bixpe.com/"):
+def run_automation(email, password, action, headless=True, dry_run=False, target_url="https://worktime.bixpe.com/", test_missing_button=False):
     p = sync_playwright().start()
     try:
         # Launch with specific args to avoid detection/rendering issues
@@ -186,7 +186,7 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
             # Check if Bixpe displays "Vacaciones en curso" on dashboard
             try:
                 body_content = page.content().lower()
-                if "vacaciones en curso" in body_content or "estarás de vacaciones" in body_content:
+                if ("vacaciones en curso" in body_content or "estarás de vacaciones" in body_content) and not test_missing_button:
                     print("🌴 [BIXPE] Detectado: 'Vacaciones en curso' en la interfaz de Bixpe.")
                     notify_vacation(action)
                     browser.close()
@@ -227,7 +227,7 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
         "END": ["#btn-stop-workday"]
     }
     
-    target_selectors = selectors_map.get(action, [])
+    target_selectors = ["#btn-inexistente-fantasma-999"] if test_missing_button else selectors_map.get(action, [])
     
     # 1. FIND THE BUTTON
     found_selector = None
@@ -452,6 +452,7 @@ if __name__ == "__main__":
     parser.add_argument("--simulate", action="store_true", help="Perform login/nav, click action, but CANCEL the confirmation modal.")
     parser.add_argument("--dry-run", action="store_true", help="(Legacy) Alias for --simulate")
     parser.add_argument("--url", default="https://worktime.bixpe.com/", help="Target URL for Bixpe automation")
+    parser.add_argument("--test-missing-button", action="store_true", help="Simulate a missing button error for testing")
     args = parser.parse_args()
     
     # Unify simulation flags
@@ -515,7 +516,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        run_automation(email, password, args.action, headless=not args.visible, dry_run=is_simulation, target_url=args.url)
+        run_automation(email, password, args.action, headless=not args.visible, dry_run=is_simulation, target_url=args.url, test_missing_button=args.test_missing_button)
     except Exception as e:
         print(f"Error fatal inesperado en la automatización: {e}")
         sys.exit(1)

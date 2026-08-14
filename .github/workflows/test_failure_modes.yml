@@ -11,6 +11,7 @@ on:
         options:
           - wrong_password
           - wrong_url
+          - missing_button
 
 jobs:
   test-failure-modes:
@@ -55,6 +56,19 @@ jobs:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
         run: python src/bixpe_bot.py --action START --force --url "https://url-inexistente-bixpe-falsa.com/"
+
+      # Modo de Error 3: Botón no encontrado en Bixpe
+      - name: TEST Error 3 (Botón Inexistente)
+        if: ${{ inputs.test_type == 'missing_button' }}
+        env:
+          BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
+          BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+        run: python src/bixpe_bot.py --action START --force --test-missing-button
 
       - name: Upload Debug Files
         if: failure()
