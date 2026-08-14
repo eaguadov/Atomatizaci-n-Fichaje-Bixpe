@@ -60,7 +60,7 @@ def is_holiday_or_weekend(holidays):
         
     return False
 
-def run_automation(email, password, action, headless=True, dry_run=False):
+def run_automation(email, password, action, headless=True, dry_run=False, target_url="https://worktime.bixpe.com/"):
     p = sync_playwright().start()
     try:
         # Launch with specific args to avoid detection/rendering issues
@@ -92,25 +92,16 @@ def run_automation(email, password, action, headless=True, dry_run=False):
         # Capture network failures to identify sources
         page.on("requestfailed", lambda request: print(f"Request failed: {request.url} - {request.failure}"))
         
-        # Capture console logs to debug JS errors
-        page.on("console", lambda msg: print(f"Browser Console: {msg.text}"))
-        
-        # Capture network failures to identify sources
-        page.on("requestfailed", lambda request: print(f"Request failed: {request.url} - {request.failure}"))
-        
-        # (Network blocking removed for stability)
-
-        
-        # -------------------------------------------------------------------------
-        # JS INJECTION: Override Geolocation API & Google Maps Mock
-        # -------------------------------------------------------------------------
-        # (Init script removed for debugging)
-        # -------------------------------------------------------------------------
-        # -------------------------------------------------------------------------
-
-
-        print("Navigating to Bixpe...")
-        page.goto("https://worktime.bixpe.com/")
+        print(f"Navigating to {target_url}...")
+        try:
+            page.goto(target_url, timeout=30000)
+        except Exception as ne:
+            print(f"Error cargando la página web ({target_url}): {ne}")
+            notify_error(action, f"No se pudo cargar la web de Bixpe ({target_url}): {ne}")
+            page.screenshot(path="error_navigation.png")
+            browser.close()
+            p.stop()
+            sys.exit(1)
         
         # Handle Cookies if present
         try:
@@ -460,6 +451,7 @@ if __name__ == "__main__":
     parser.add_argument("--force", action="store_true", help="Ignore schedule and holiday checks")
     parser.add_argument("--simulate", action="store_true", help="Perform login/nav, click action, but CANCEL the confirmation modal.")
     parser.add_argument("--dry-run", action="store_true", help="(Legacy) Alias for --simulate")
+    parser.add_argument("--url", default="https://worktime.bixpe.com/", help="Target URL for Bixpe automation")
     args = parser.parse_args()
     
     # Unify simulation flags
@@ -523,8 +515,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     try:
-        run_automation(email, password, args.action, headless=not args.visible, dry_run=is_simulation)
+        run_automation(email, password, args.action, headless=not args.visible, dry_run=is_simulation, target_url=args.url)
     except Exception as e:
         print(f"Error fatal inesperado en la automatización: {e}")
         sys.exit(1)
-
