@@ -2,6 +2,17 @@ name: TEST Full Cycle (Manual)
 
 on:
   workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Elige el modo de prueba (Ciclo normal o simulación de error)'
+        required: true
+        default: 'full_cycle'
+        type: choice
+        options:
+          - full_cycle
+          - wrong_password
+          - wrong_url
+          - missing_button
 
 jobs:
   full-test:
@@ -13,15 +24,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
           playwright install chromium
+          playwright install-deps chromium
 
-      # 1. START
+      # -----------------------------------------------------------------
+      # MODO 1: CICLO COMPLETO NORMAL (START -> PAUSE -> RESUME -> END)
+      # -----------------------------------------------------------------
       - name: TEST Start (Simulation)
+        if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
@@ -32,12 +47,12 @@ jobs:
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
         run: python src/bixpe_bot.py --action START --force --simulate
 
-      # Wait 5s
       - name: Wait 5 seconds
+        if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         run: sleep 5
 
-      # 2. PAUSE
       - name: TEST Pause (Simulation)
+        if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
@@ -48,12 +63,12 @@ jobs:
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
         run: python src/bixpe_bot.py --action PAUSE --force --simulate
 
-      # Wait 5s
       - name: Wait 5 seconds
+        if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         run: sleep 5
 
-      # 3. RESUME
       - name: TEST Resume (Simulation)
+        if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
@@ -64,12 +79,12 @@ jobs:
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
         run: python src/bixpe_bot.py --action RESUME --force --simulate
 
-      # Wait 5s
       - name: Wait 5 seconds
+        if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         run: sleep 5
 
-      # 4. END
       - name: TEST End (Simulation)
+        if: ${{ inputs.test_mode == 'full_cycle' || inputs.test_mode == '' }}
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
@@ -80,12 +95,57 @@ jobs:
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
         run: python src/bixpe_bot.py --action END --force --simulate
 
+      # -----------------------------------------------------------------
+      # MODO 2: ERROR DE CONTRASEÑA INCORRECTA
+      # -----------------------------------------------------------------
+      - name: TEST Error 1 (Contraseña Incorrecta)
+        if: ${{ inputs.test_mode == 'wrong_password' }}
+        env:
+          BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
+          BIXPE_PASSWORD: "contrasena_falsa_de_prueba_123"
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+        run: python src/bixpe_bot.py --action START --force
+
+      # -----------------------------------------------------------------
+      # MODO 3: ERROR DE URL ERRÓNEA / PÁGINA QUE NO CARGA
+      # -----------------------------------------------------------------
+      - name: TEST Error 2 (URL Errónea)
+        if: ${{ inputs.test_mode == 'wrong_url' }}
+        env:
+          BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
+          BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+        run: python src/bixpe_bot.py --action START --force --url "https://url-inexistente-bixpe-falsa.com/"
+
+      # -----------------------------------------------------------------
+      # MODO 4: ERROR DE BOTÓN NO ENCONTRADO EN LA INTERFAZ
+      # -----------------------------------------------------------------
+      - name: TEST Error 3 (Botón Inexistente)
+        if: ${{ inputs.test_mode == 'missing_button' }}
+        env:
+          BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
+          BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+        run: python src/bixpe_bot.py --action START --force --test-missing-button
+
       # Upload all screenshots and generic debug files
       - name: Upload Screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verification-screenshots
+          name: verification-screenshots-${{ github.run_id }}
           path: |
             *.png
             *.html
@@ -99,7 +159,7 @@ jobs:
           if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
             curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
               -d "chat_id=${TELEGRAM_CHAT_ID}" \
-              -d "text=⚠️ *ERROR EN FICHAJE BIXPE* ⚠️%0A%0A*Acción:* ${{ github.workflow }}%0A*Estado:* Falló ❌%0A*Repositorio:* ${{ github.repository }}%0A*Ejecución:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              -d "text=⚠️ *ERROR EN FICHAJE BIXPE (PRUEBA DE ERRORES)* ⚠️%0A%0A*Acción:* ${{ github.workflow }}%0A*Modo:* ${{ inputs.test_mode }}%0A*Estado:* Falló ❌%0A*Repositorio:* ${{ github.repository }}%0A*Ejecución:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
               -d "parse_mode=Markdown"
           else
             echo "Telegram token or chat ID not set. Skipping Telegram alert."
