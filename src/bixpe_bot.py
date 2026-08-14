@@ -5,6 +5,28 @@ import time
 import argparse
 from datetime import datetime, date
 from playwright.sync_api import sync_playwright
+
+try:
+    from telegram_notifier import (
+        notify_success,
+        notify_vacation,
+        notify_holiday_or_weekend,
+        notify_error
+    )
+except ImportError:
+    try:
+        from src.telegram_notifier import (
+            notify_success,
+            notify_vacation,
+            notify_holiday_or_weekend,
+            notify_error
+        )
+    except ImportError:
+        def notify_success(*args, **kwargs): pass
+        def notify_vacation(*args, **kwargs): pass
+        def notify_holiday_or_weekend(*args, **kwargs): pass
+        def notify_error(*args, **kwargs): pass
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -38,7 +60,7 @@ def is_holiday_or_weekend(holidays):
         
     return False
 
-def run_automation(email, password, action, headless=True, dry_run=False):
+def run_automation(email, password, action, headless=True, dry_run=False, target_url="https://worktime.bixpe.com/", test_missing_button=False):
     p = sync_playwright().start()
     try:
         # Launch with specific args to avoid detection/rendering issues
@@ -70,25 +92,20 @@ def run_automation(email, password, action, headless=True, dry_run=False):
         # Capture network failures to identify sources
         page.on("requestfailed", lambda request: print(f"Request failed: {request.url} - {request.failure}"))
         
-        # Capture console logs to debug JS errors
-        page.on("console", lambda msg: print(f"Browser Console: {msg.text}"))
-        
-        # Capture network failures to identify sources
-        page.on("requestfailed", lambda request: print(f"Request failed: {request.url} - {request.failure}"))
-        
-        # (Network blocking removed for stability)
-
-        
-        # -------------------------------------------------------------------------
-        # JS INJECTION: Override Geolocation API & Google Maps Mock
-        # -------------------------------------------------------------------------
-        # (Init script removed for debugging)
-        # -------------------------------------------------------------------------
-        # -------------------------------------------------------------------------
-
-
-        print("Navigating to Bixpe...")
-        page.goto("https://worktime.bixpe.com/")
+        print(f"Navigating to {target_url}...")
+        try:
+            page.goto(target_url, timeout=30000)
+        except Exception as ne:
+            clean_err = str(ne).split("\n")[0]
+            print(f"Error cargando la página web ({target_url}): {clean_err}")
+            notify_error(action, f"No se pudo cargar la web de Bixpe ({target_url}): {clean_err}")
+            try:
+                page.screenshot(path="error_navigation.png")
+            except:
+                pass
+            browser.close()
+            p.stop()
+            sys.exit(1)
         
         # Handle Cookies if present
         try:
@@ -167,20 +184,47 @@ def run_automation(email, password, action, headless=True, dry_run=False):
             # Explicit safety sleep to prevent crashes on dynamic loads
             print("Sleeping 10s (via Playwright) to ensure dashboard stability...")
             page.wait_for_timeout(10000)
+
+            # Extra safety check: Try waiting for redirection to worktime.bixpe.com
+            try:
+                page.wait_for_url(lambda u: "auth2.bixpe.com" not in u.lower(), timeout=5000)
+            except:
+                pass # If timeout occurs, page.url check below will handle login failure safely
+
             print("Login wait finished. Checking URL...")
             print(f"Post-login URL: {page.url}")
 
+            # Check if login failed (URL still on login page)
+            if "account/login" in page.url.lower() or "auth2.bixpe.com" in page.url.lower():
+                print("❌ [BIXPE] Error de autenticación: El inicio de sesión falló.")
+                page.screenshot(path="error_login_failed.png")
+                notify_error(action, "Error durante inicio de sesión en Bixpe: Usuario o contraseña incorrectos.")
+                browser.close()
+                p.stop()
+                sys.exit(1)
+
+            # Check if Bixpe displays "Vacaciones en curso" on dashboard
+            try:
+                body_content = page.content().lower()
+                if ("vacaciones en curso" in body_content or "estarás de vacaciones" in body_content) and not test_missing_button:
+                    print("🌴 [BIXPE] Detectado: 'Vacaciones en curso' en la interfaz de Bixpe.")
+                    notify_vacation(action)
+                    browser.close()
+                    p.stop()
+                    sys.exit(0)
+            except Exception as ve:
+                print(f"Warning checking vacation status: {ve}")
 
         except Exception as e:
             print(f"Error during login: {e}")
             print(f"Current URL: {page.url}")
             print(f"Page Title: {page.title()}")
             page.screenshot(path="error_login.png")
+            notify_error(action, f"Error durante inicio de sesión: {e}")
             # Dump HTML for debugging
             with open("debug_login.html", "w", encoding="utf-8") as f:
                 f.write(page.content())
             print("Saved debug_login.html. Please verify selectors.")
-            # Cleanup handled in finally block
             sys.exit(1)
     finally:
         pass  # Ensures try block is properly closed
@@ -203,7 +247,7 @@ def run_automation(email, password, action, headless=True, dry_run=False):
         "END": ["#btn-stop-workday"]
     }
     
-    target_selectors = selectors_map.get(action, [])
+    target_selectors = ["#btn-inexistente-fantasma-999"] if test_missing_button else selectors_map.get(action, [])
     
     # 1. FIND THE BUTTON
     found_selector = None
@@ -219,11 +263,20 @@ def run_automation(email, password, action, headless=True, dry_run=False):
                     break
                 else:
                     print(f"Selector exists but HIDDEN: {sel}")
-                    print(">>> This likely means you are ALREADY CLOCKED IN for this action.")
-                    print(">>> The button is not available. Exiting gracefully.")
-                    browser.close()
-                    p.stop()
-                    sys.exit(0)  # Exit with 0 (not an error, just already done)
+                    body_text = page.content().lower()
+                    if "vacaciones" in body_text:
+                        print("🌴 [BIXPE] Botón oculto por vacaciones en curso.")
+                        notify_vacation(action)
+                        browser.close()
+                        p.stop()
+                        sys.exit(0)
+                    else:
+                        print(">>> Error: El botón está oculto y no estás de vacaciones.")
+                        notify_error(action, f"El botón '{sel}' está oculto en la interfaz.")
+                        page.screenshot(path=f"error_btn_hidden_{action}.png")
+                        browser.close()
+                        p.stop()
+                        sys.exit(1)
         except Exception as e:
             print(f"Check failed for {sel}: {e}")
             
@@ -264,8 +317,10 @@ def run_automation(email, password, action, headless=True, dry_run=False):
             print(f"Could not save HTML dump: {e}")
             
         page.screenshot(path=f"error_no_btn_{action}.png")
-        if not dry_run:
-             sys.exit(1)
+        notify_error(action, f"No se encontró el botón para {action} en la pantalla de Bixpe.")
+        browser.close()
+        p.stop()
+        sys.exit(1)
 
     # ---------------------------------------------------------
     # DIAGNOSTIC CHECKLIST (Per User Request)
@@ -342,6 +397,7 @@ def run_automation(email, password, action, headless=True, dry_run=False):
         print(f"FATAL ERROR clicking button: {e}")
         print(">>> Click failed. Taking error screenshot and exiting.")
         page.screenshot(path=f"error_click_{action}_{time.strftime('%Y%m%d_%H%M%S')}.png")
+        notify_error(action, f"Fallo al pulsar el botón en Bixpe: {e}")
         browser.close()
         p.stop()
         sys.exit(1)  # Exit with error code
@@ -385,12 +441,23 @@ def run_automation(email, password, action, headless=True, dry_run=False):
                 print("No confirmation dialog found (or not needed).")
         except Exception as e:
             print(f"Confirmation check error: {e}")
+            page.screenshot(path=f"error_confirm_{action}_{time.strftime('%Y%m%d_%H%M%S')}.png")
+            notify_error(action, f"Error en diálogo de confirmación: {e}")
+            try:
+                browser.close()
+            except:
+                pass
+            p.stop()
+            sys.exit(1)
     else:
         print(f"Action {action} requires no confirmation interaction.")
 
     # Success Screenshot
     page.screenshot(path=f"screenshot_{action}_{time.strftime('%Y%m%d_%H%M%S')}.png")
     
+    # Notify Success or Simulation via Telegram
+    notify_success(action, is_simulation=dry_run)
+
     # Cleanup resources
     try:
         browser.close()
@@ -406,6 +473,8 @@ if __name__ == "__main__":
     parser.add_argument("--force", action="store_true", help="Ignore schedule and holiday checks")
     parser.add_argument("--simulate", action="store_true", help="Perform login/nav, click action, but CANCEL the confirmation modal.")
     parser.add_argument("--dry-run", action="store_true", help="(Legacy) Alias for --simulate")
+    parser.add_argument("--url", default="https://worktime.bixpe.com/", help="Target URL for Bixpe automation")
+    parser.add_argument("--test-missing-button", action="store_true", help="Simulate a missing button error for testing")
     args = parser.parse_args()
     
     # Unify simulation flags
@@ -419,6 +488,7 @@ if __name__ == "__main__":
     # --force only skips schedule/time checks, not holiday checks
     if is_holiday_or_weekend(holidays):
         print("Exiting: Today is a holiday or weekend.")
+        notify_holiday_or_weekend("Fin de semana o festivo programado")
         sys.exit(0)
 
     # Load Schedule
@@ -467,5 +537,8 @@ if __name__ == "__main__":
         print("Error: BIXPE_EMAIL and BIXPE_PASSWORD environment variables must be set.")
         sys.exit(1)
 
-    run_automation(email, password, args.action, headless=not args.visible, dry_run=is_simulation)
-
+    try:
+        run_automation(email, password, args.action, headless=not args.visible, dry_run=is_simulation, target_url=args.url, test_missing_button=args.test_missing_button)
+    except Exception as e:
+        print(f"Error fatal inesperado en la automatización: {e}")
+        sys.exit(1)

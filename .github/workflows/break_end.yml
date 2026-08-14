@@ -27,6 +27,11 @@ jobs:
         env:
           BIXPE_EMAIL: ${{ secrets.BIXPE_EMAIL }}
           BIXPE_PASSWORD: ${{ secrets.BIXPE_PASSWORD }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
         run: |
           echo "=== Resuming from Break at $(date) ==="
           python src/bixpe_bot.py --action RESUME --force
@@ -49,3 +54,18 @@ jobs:
             *.html
             *.png
           retention-days: 7
+
+      - name: Send Telegram Notification on Failure
+        if: failure()
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+              -d "chat_id=${TELEGRAM_CHAT_ID}" \
+              -d "text=⚠️ *ERROR EN FICHAJE BIXPE* ⚠️%0A%0A*Acción:* ${{ github.workflow }}%0A*Estado:* Falló ❌%0A*Repositorio:* ${{ github.repository }}%0A*Ejecución:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              -d "parse_mode=Markdown"
+          else
+            echo "Telegram token or chat ID not set. Skipping Telegram alert."
+          fi
