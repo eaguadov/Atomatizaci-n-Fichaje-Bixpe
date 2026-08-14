@@ -6,6 +6,11 @@ import argparse
 from datetime import datetime, date
 from playwright.sync_api import sync_playwright
 
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
 try:
     from telegram_notifier import (
         notify_success,
@@ -92,20 +97,27 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
         # Capture network failures to identify sources
         page.on("requestfailed", lambda request: print(f"Request failed: {request.url} - {request.failure}"))
         
-        print(f"Navigating to {target_url}...")
-        try:
-            page.goto(target_url, timeout=30000)
-        except Exception as ne:
-            clean_err = str(ne).split("\n")[0]
-            print(f"Error cargando la página web ({target_url}): {clean_err}")
-            notify_error(action, f"No se pudo cargar la web de Bixpe ({target_url}): {clean_err}")
+        print(f"Navigating to {target_url} (con reintentos automáticos)...")
+        max_nav_retries = 3
+        for attempt in range(1, max_nav_retries + 1):
             try:
-                page.screenshot(path="error_navigation.png")
-            except:
-                pass
-            browser.close()
-            p.stop()
-            sys.exit(1)
+                page.goto(target_url, timeout=30000)
+                break
+            except Exception as ne:
+                clean_err = str(ne).split("\n")[0]
+                print(f"Intento {attempt}/{max_nav_retries} de carga fallido ({target_url}): {clean_err}")
+                if attempt < max_nav_retries:
+                    time.sleep(3)
+                else:
+                    print(f"Error fatal tras {max_nav_retries} intentos cargando la página web.")
+                    notify_error(action, f"No se pudo cargar la web de Bixpe ({target_url}) tras {max_nav_retries} intentos: {clean_err}")
+                    try:
+                        page.screenshot(path="error_navigation.png")
+                    except:
+                        pass
+                    browser.close()
+                    p.stop()
+                    sys.exit(1)
         
         # Handle Cookies if present
         try:
@@ -174,16 +186,34 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
                  print("Pressed Enter to login")
             
             # Wait for dashboard to load
-            print("Waiting for dashboard to load (networkidle)...")
+            print("Waiting for dashboard to load (espera dinámica)...")
             try:
-                page.wait_for_load_state("networkidle", timeout=30000)
+                page.wait_for_load_state("networkidle", timeout=15000)
                 print("Network idle reached.")
             except:
-                print("Warning: Network idle timeout. Proceeding...")
+                print("Warning: Network idle timeout. Proceeding con espera de elementos...")
             
-            # Explicit safety sleep to prevent crashes on dynamic loads
-            print("Sleeping 10s (via Playwright) to ensure dashboard stability...")
-            page.wait_for_timeout(10000)
+            # Dynamic Wait for dashboard element instead of hardcoded 10s sleep
+            dashboard_selectors = [
+                "#btn-start-workday",
+                "#btn-stop-workday",
+                "#btn-pause-lunch",
+                "#btn-resume-workday",
+                "a[href*='logout']",
+                "#main-content"
+            ]
+            try:
+                found_dashboard_element = False
+                for sel in dashboard_selectors:
+                    if page.is_visible(sel, timeout=2000):
+                        found_dashboard_element = True
+                        print(f"Panel de control detectado rápidamente por el elemento: {sel}")
+                        break
+                if not found_dashboard_element:
+                    page.wait_for_selector(", ".join(dashboard_selectors), timeout=10000, state="attached")
+                    print("Panel detectado mediante selector de seguridad.")
+            except Exception as de:
+                print(f"Espera dinámica finalizada/tolerada (verificando URL): {de}")
 
             # Extra safety check: Try waiting for redirection to worktime.bixpe.com
             try:
@@ -264,19 +294,14 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
                 else:
                     print(f"Selector exists but HIDDEN: {sel}")
                     body_text = page.content().lower()
-                    if "vacaciones" in body_text:
+                    if "vacaciones en curso" in body_text or "estarás de vacaciones" in body_text:
                         print("🌴 [BIXPE] Botón oculto por vacaciones en curso.")
                         notify_vacation(action)
                         browser.close()
                         p.stop()
                         sys.exit(0)
                     else:
-                        print(">>> Error: El botón está oculto y no estás de vacaciones.")
-                        notify_error(action, f"El botón '{sel}' está oculto en la interfaz.")
-                        page.screenshot(path=f"error_btn_hidden_{action}.png")
-                        browser.close()
-                        p.stop()
-                        sys.exit(1)
+                        print(">>> Botón no visible directamente. Intentando interacción o diagnósticos de visibilidad...")
         except Exception as e:
             print(f"Check failed for {sel}: {e}")
             
