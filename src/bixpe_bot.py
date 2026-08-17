@@ -233,11 +233,19 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
                 p.stop()
                 sys.exit(1)
 
+            # Captura de pantalla del panel tras login exitoso (diagnóstico)
+            page.screenshot(path=f"dashboard_{action}_{time.strftime('%Y%m%d_%H%M%S')}.png")
+            print("📸 Captura del panel guardada para diagnóstico.")
+
             # Check if Bixpe displays "Vacaciones en curso" on dashboard
+            # IMPORTANTE: Usar inner_text("body") para leer SOLO el texto visible,
+            # NO page.content() que incluye el código JavaScript donde estas
+            # cadenas existen como literals aunque el usuario NO esté de vacaciones.
             try:
-                body_content = page.content().lower()
-                if ("vacaciones en curso" in body_content or "estarás de vacaciones" in body_content) and not test_missing_button:
-                    print("🌴 [BIXPE] Detectado: 'Vacaciones en curso' en la interfaz de Bixpe.")
+                visible_text = page.inner_text("body").lower()
+                if ("vacaciones en curso" in visible_text or "estarás de vacaciones" in visible_text) and not test_missing_button:
+                    print("🌴 [BIXPE] Detectado: 'Vacaciones en curso' en el texto visible de Bixpe.")
+                    page.screenshot(path=f"vacaciones_{action}_{time.strftime('%Y%m%d_%H%M%S')}.png")
                     notify_vacation(action)
                     browser.close()
                     p.stop()
@@ -293,9 +301,10 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
                     break
                 else:
                     print(f"Selector exists but HIDDEN: {sel}")
-                    body_text = page.content().lower()
-                    if "vacaciones en curso" in body_text or "estarás de vacaciones" in body_text:
+                    visible_text = page.inner_text("body").lower()
+                    if "vacaciones en curso" in visible_text or "estarás de vacaciones" in visible_text:
                         print("🌴 [BIXPE] Botón oculto por vacaciones en curso.")
+                        page.screenshot(path=f"vacaciones_btn_{action}_{time.strftime('%Y%m%d_%H%M%S')}.png")
                         notify_vacation(action)
                         browser.close()
                         p.stop()
