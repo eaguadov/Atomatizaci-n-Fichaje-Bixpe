@@ -2,6 +2,17 @@
 
 Todos los cambios notables de este proyecto se documentarán en este archivo.
 
+## [2.0.1] - 2026-08-17
+
+### Corregido
+- **Falso positivo de vacaciones**: La detección de vacaciones usaba `page.content()` que incluye el código JavaScript de Bixpe, donde las cadenas `"vacaciones en curso"` y `"estarás de vacaciones"` existen como literals del programa aunque el usuario NO esté de vacaciones. Cambiado a `page.inner_text("body")` que solo lee el texto visible en pantalla.
+
+### Añadido
+- **Capturas de diagnóstico del panel**: Se genera automáticamente una captura de pantalla (`dashboard_{ACCIÓN}_{fecha}.png`) justo después del login exitoso en cada ejecución, permitiendo ver exactamente qué vio el bot al entrar al panel de Bixpe.
+- **Captura en detección de vacaciones**: Si se detectan vacaciones reales, se guarda una captura adicional (`vacaciones_{ACCIÓN}_{fecha}.png`) como evidencia.
+
+---
+
 ## [2.0.0] - 2026-08-14
 
 ### Añadido
