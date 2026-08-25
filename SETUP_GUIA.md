@@ -57,11 +57,19 @@ Sigue estos 3 sencillos pasos para crear tu Bot y vincularlo:
 3. Asignale un nombre y un nombre de usuario (debe terminar en `bot`, ej: `MiFichajeBixpe_bot`).
 4. **Copia el Token** que te proporciona BotFather (ej: `123456789:ABC...`). Este es tu **`TELEGRAM_TOKEN`**.
 
-### 3.2. Obtener tu Chat ID (Método seguro)
-1. Busca al bot **`@MissRose_bot`** e inicia el chat.
-2. Envía el comando `/id`.
-3. **Copia el número que te devuelve** (ej: `987654321`). Este es tu **`TELEGRAM_CHAT_ID`**.
-4. **IMPORTANTE**: Busca tu propio bot recién creado (ej: `@MiFichajeBixpe_bot`) y envíale un mensaje inicial (ej: `Hola`) para registrar la interacción y permitirle enviarte avisos.
+### 3.2. Obtener tu Chat ID (Método oficial y privado)
+1. **IMPORTANTE**: Busca tu propio bot recién creado (ej: `@MiFichajeBixpe_bot`) e inicia el chat pulsando **Iniciar** o enviándole un mensaje inicial (ej: `Hola`). Esto es indispensable para que tu bot tenga permiso para enviarte mensajes.
+2. Abre tu navegador web y accede a la siguiente URL, reemplazando `<TELEGRAM_TOKEN>` por el token largo que te dio BotFather en el paso anterior:
+   ```text
+   https://api.telegram.org/bot<TELEGRAM_TOKEN>/getUpdates
+   ```
+3. En la respuesta en pantalla (formato JSON), busca el fragmento `"chat"` o `"from"`. Verás un campo `"id"` con un número (ej: `987654321`). Ese número de 9 o 10 dígitos es tu **`TELEGRAM_CHAT_ID`**.
+
+> 💡 *Nota: Si la página web se muestra vacía (`{"ok":true,"result":[]}`), es porque no has enviado el mensaje de saludo a tu bot en el Paso 1. Envíale un mensaje, refresca la página de la API y aparecerá.*
+
+#### Método Alternativo (Bot de terceros):
+Puedes buscar al bot **`@MissRose_bot`** en Telegram, iniciar un chat con ella y enviarle el comando `/id`. Ella te devolverá tu número de ID.
+*⚠️ **Advertencia de privacidad:** Al interactuar con bots de terceros como MissRose, estás compartiendo tus metadatos (ID de usuario, nombre y mensajes) con sus servidores externos. El método oficial a través de la API (`getUpdates`) es 100% privado y seguro.*
 
 ### 3.3. Guardar los Secretos en GitHub
 Añade `TELEGRAM_TOKEN` y `TELEGRAM_CHAT_ID` en la sección **Settings > Secrets and variables > Actions** de tu repositorio.
