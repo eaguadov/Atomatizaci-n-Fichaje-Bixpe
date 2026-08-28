@@ -31,7 +31,7 @@ def find_excel_path():
 
 def is_holiday(cell):
     """Detecta si una celda es festivo/vacaciones leyendo su texto o su color de fondo rojo."""
-    val = str(cell.value).strip().upper()
+    val = str(cell.value or '').strip().upper()
     
     # Comprobar texto (V, V25, V26, V99... y festivos)
     if val == 'V' or (val.startswith('V') and val[1:].isdigit()) or val in ['FL', 'FA', 'F']:
@@ -39,10 +39,11 @@ def is_holiday(cell):
         
     # Comprobar color de fondo rojo
     if cell.fill and cell.fill.start_color:
-        color_index = str(cell.fill.start_color.index)
-        color_rgb = getattr(cell.fill.start_color, 'rgb', '')
+        color_index = str(cell.fill.start_color.index or '')
+        color_rgb = str(getattr(cell.fill.start_color, 'rgb', '') or '')
         
-        if 'FF0000' in color_index or (color_rgb and 'FF0000' in str(color_rgb)):
+        # openpyxl suele devolver FFFF0000 o index 2 para rojo estándar
+        if 'FF0000' in color_index or 'FF0000' in color_rgb or color_index == '2':
             return True
             
     return False
@@ -78,27 +79,15 @@ def main():
 
         print(f"Procesando pestaña: {year_str}")
         ws = wb[year_str]
+        month_counter = 1
 
         for r in range(1, ws.max_row + 1):
-            cell_val = str(ws.cell(row=r, column=1).value).strip()
+            cell_val = str(ws.cell(row=r, column=1).value or '').strip()
             
             # Buscamos la palabra clave que inicia la tabla de días
             if cell_val.upper() == "NOMBRE":
-                # Buscar qué mes es leyendo las 2-3 filas de arriba
-                month_num = None
-                for up_row in range(max(1, r-3), r):
-                    for col in range(1, 5):
-                        val = ws.cell(row=up_row, column=col).value
-                        month_num = get_month_number(val)
-                        if month_num:
-                            break
-                    if month_num: break
-                
-                if not month_num:
-                    print(f"  Advertencia: Encontrado 'NOMBRE' en fila {r} pero no detecto el mes. Omitiendo bloque.")
-                    continue
-                
-                print(f"  -> Detectado bloque para el mes {month_num} (Fila de días: {r})")
+                month_num = month_counter
+                print(f"  -> Procesando Mes {month_num} del año {year_str} (Fila de días: {r})")
                 
                 # Leer empleados hacia abajo (hasta que la columna A esté vacía)
                 for er in range(r + 1, r + 50):
@@ -113,7 +102,7 @@ def main():
                     # Leer columnas del 1 al 31 (B=2 hasta AF=32)
                     for c in range(2, 33):
                         day_val = ws.cell(row=r, column=c).value
-                        if isinstance(day_val, (int, float)) or (isinstance(day_val, str) and day_val.isdigit()):
+                        if isinstance(day_val, (int, float)) or (isinstance(day_val, str) and str(day_val).isdigit()):
                             day = int(day_val)
                             if 1 <= day <= 31:
                                 try:
@@ -126,6 +115,10 @@ def main():
                                             team_holidays[emp_name].append(date_str)
                                 except ValueError:
                                     pass # Día inválido como 30 de febrero
+                                    
+                month_counter += 1
+                if month_counter > 12:
+                    break
 
     # Ordenar las fechas de cada empleado
     for emp in team_holidays:
