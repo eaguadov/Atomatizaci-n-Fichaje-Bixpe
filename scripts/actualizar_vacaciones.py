@@ -33,17 +33,23 @@ def get_holiday_reason(cell):
     """Detecta si una celda es festivo/vacaciones y devuelve el código (V, V25, FL, FA, F...) o motivo."""
     val = str(cell.value or '').strip().upper()
     
-    # 1. Comprobar texto (V, V25, V26, V99... y festivos)
+    # 1. Comprobar texto explícito (V, V25, V26, V99... y festivos)
     if val == 'V' or (val.startswith('V') and val[1:].isdigit()) or val in ['FL', 'FA', 'F']:
         return val
         
-    # 2. Comprobar color de fondo rojo (festivos nacionales o fines de semana sin texto)
-    if cell.fill and cell.fill.start_color:
-        color_index = str(cell.fill.start_color.index or '')
-        color_rgb = str(getattr(cell.fill.start_color, 'rgb', '') or '')
-        
-        if 'FF0000' in color_index or 'FF0000' in color_rgb or color_index == '2':
-            return "F"
+    # 2. Comprobar color de fondo rojo real (solo con relleno sólido)
+    if cell.fill and getattr(cell.fill, 'fill_type', None) == 'solid':
+        color = cell.fill.start_color
+        if color:
+            color_index = str(getattr(color, 'index', '') or '').upper()
+            color_rgb = str(getattr(color, 'rgb', '') or '').upper()
+            
+            # Solo si el RGB es rojo puro o rojo oscuro estándar
+            if 'FF0000' in color_rgb or color_rgb in ['FFFF0000', 'FF0000', 'FFC00000']:
+                return "F"
+            # O si el índice indexed es exactamente 2 en temas clásicos
+            if getattr(color, 'type', None) == 'indexed' and color_index == '2':
+                return "F"
             
     return None
 
@@ -55,6 +61,20 @@ def get_month_number(text):
     for m_text, num in months.items():
         if text.startswith(m_text):
             return num
+    return None
+
+def get_month_from_sheet(ws, r):
+    """Detecta el número de mes buscando en las filas anteriores a NOMBRE."""
+    for up_row in [r-2, r-1, r-3]:
+        if up_row >= 1:
+            for col in range(1, 15):
+                val = ws.cell(row=up_row, column=col).value
+                if isinstance(val, (datetime.date, datetime.datetime)):
+                    return val.month
+                if val:
+                    m = get_month_number(val)
+                    if m:
+                        return m
     return None
 
 def main():
@@ -85,16 +105,22 @@ def main():
             
             # Buscamos la palabra clave que inicia la tabla de días
             if cell_val.upper() == "NOMBRE":
-                month_num = month_counter
+                detected_m = get_month_from_sheet(ws, r)
+                month_num = detected_m if detected_m else month_counter
                 print(f"  -> Procesando Mes {month_num} del año {year_str} (Fila de días: {r})")
                 
-                # Leer empleados hacia abajo (hasta que la columna A esté vacía)
-                for er in range(r + 1, r + 50):
-                    emp_name = ws.cell(row=er, column=1).value
-                    if not emp_name:
-                        break # Fin de los nombres
+                # Leer empleados en las filas siguientes (hasta 15 filas)
+                for er in range(r + 1, r + 15):
+                    emp_name = str(ws.cell(row=er, column=1).value or '').strip()
                     
-                    emp_name = str(emp_name).strip()
+                    # Si llegamos al siguiente bloque o mes, paramos este bloque
+                    if emp_name.upper() == "NOMBRE" or get_month_number(emp_name):
+                        break
+                    
+                    # Si la fila está vacía (separador), continuamos buscando en la siguiente
+                    if not emp_name:
+                        continue
+                    
                     if emp_name not in team_holidays:
                         team_holidays[emp_name] = {}
                     
