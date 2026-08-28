@@ -48,7 +48,7 @@ jobs:
           echo "=== Finished Break Start at $(date) ==="
 
       - name: Notificar a Healthchecks (Pausa)
-        if: success()
+        if: always()
         env:
           HC_URL: ${{ secrets.HC_URL_PAUSE }}
         run: |

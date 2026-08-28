@@ -48,7 +48,7 @@ jobs:
           echo "=== Finished Clock Out at $(date) ==="
 
       - name: Notificar a Healthchecks (Salida)
-        if: success()
+        if: always()
         env:
           HC_URL: ${{ secrets.HC_URL_END }}
         run: |
