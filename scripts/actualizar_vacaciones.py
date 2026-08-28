@@ -29,24 +29,23 @@ def find_excel_path():
                 return os.path.join(DEFAULT_DIR, f)
     return None
 
-def is_holiday(cell):
-    """Detecta si una celda es festivo/vacaciones leyendo su texto o su color de fondo rojo."""
+def get_holiday_reason(cell):
+    """Detecta si una celda es festivo/vacaciones y devuelve el código (V, V25, FL, FA, F...) o motivo."""
     val = str(cell.value or '').strip().upper()
     
-    # Comprobar texto (V, V25, V26, V99... y festivos)
+    # 1. Comprobar texto (V, V25, V26, V99... y festivos)
     if val == 'V' or (val.startswith('V') and val[1:].isdigit()) or val in ['FL', 'FA', 'F']:
-        return True
+        return val
         
-    # Comprobar color de fondo rojo
+    # 2. Comprobar color de fondo rojo (festivos nacionales o fines de semana sin texto)
     if cell.fill and cell.fill.start_color:
         color_index = str(cell.fill.start_color.index or '')
         color_rgb = str(getattr(cell.fill.start_color, 'rgb', '') or '')
         
-        # openpyxl suele devolver FFFF0000 o index 2 para rojo estándar
         if 'FF0000' in color_index or 'FF0000' in color_rgb or color_index == '2':
-            return True
+            return "F"
             
-    return False
+    return None
 
 def get_month_number(text):
     """Deduce el número de mes a partir de un texto como 'ene-26'."""
@@ -97,7 +96,7 @@ def main():
                     
                     emp_name = str(emp_name).strip()
                     if emp_name not in team_holidays:
-                        team_holidays[emp_name] = []
+                        team_holidays[emp_name] = {}
                     
                     # Leer columnas del 1 al 31 (B=2 hasta AF=32)
                     for c in range(2, 33):
@@ -108,11 +107,11 @@ def main():
                                 try:
                                     date_obj = datetime.date(int(year_str), month_num, day)
                                     target_cell = ws.cell(row=er, column=c)
+                                    reason = get_holiday_reason(target_cell)
                                     
-                                    if is_holiday(target_cell):
+                                    if reason:
                                         date_str = date_obj.strftime("%Y-%m-%d")
-                                        if date_str not in team_holidays[emp_name]:
-                                            team_holidays[emp_name].append(date_str)
+                                        team_holidays[emp_name][date_str] = reason
                                 except ValueError:
                                     pass # Día inválido como 30 de febrero
                                     
@@ -120,9 +119,9 @@ def main():
                 if month_counter > 12:
                     break
 
-    # Ordenar las fechas de cada empleado
+    # Ordenar por fecha cada diccionario de empleado
     for emp in team_holidays:
-        team_holidays[emp] = sorted(team_holidays[emp])
+        team_holidays[emp] = dict(sorted(team_holidays[emp].items()))
 
     # Guardar JSON en la raíz del repositorio
     repo_dir = os.path.dirname(os.path.dirname(__file__))

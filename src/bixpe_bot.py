@@ -63,7 +63,11 @@ def load_holidays(json_path):
                 if response.status == 200:
                     team_data = json.loads(response.read().decode('utf-8'))
                     if empleado in team_data:
-                        holidays.extend(team_data[empleado])
+                        emp_holidays = team_data[empleado]
+                        if isinstance(emp_holidays, dict):
+                            holidays.extend(emp_holidays.keys())
+                        elif isinstance(emp_holidays, list):
+                            holidays.extend(emp_holidays)
                         print(f"Festivos de {empleado} sincronizados desde el archivo maestro.")
                     else:
                         print(f"Aviso: El empleado '{empleado}' no se encontró en el calendario maestro.")
