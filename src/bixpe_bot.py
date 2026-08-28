@@ -39,14 +39,38 @@ except ImportError:
     pass # In CI/CD dotenv might not be needed/installed, or managed differently
 
 def load_holidays(json_path):
-    """Loads holidays from the JSON file."""
+    """Loads holidays from local file and team_holidays from GitHub."""
+    holidays = []
+    
+    # 1. Fallback: Local holidays.json
     try:
         with open(json_path, 'r') as f:
-            holidays = json.load(f)
-        return holidays
+            local = json.load(f)
+            if isinstance(local, list):
+                holidays.extend(local)
     except FileNotFoundError:
-        print(f"Warning: {json_path} not found. No holidays loaded.")
-        return []
+        pass
+
+    # 2. Archivo Maestro: team_holidays.json desde GitHub
+    empleado = os.environ.get("EMPLEADO", "").strip()
+    if empleado:
+        try:
+            import urllib.request
+            # Lee el RAW desde tu repositorio principal
+            url = "https://raw.githubusercontent.com/eaguadov/Atomatizaci-n-Fichaje-Bixpe/main/team_holidays.json"
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=10) as response:
+                if response.status == 200:
+                    team_data = json.loads(response.read().decode('utf-8'))
+                    if empleado in team_data:
+                        holidays.extend(team_data[empleado])
+                        print(f"Festivos de {empleado} sincronizados desde el archivo maestro.")
+                    else:
+                        print(f"Aviso: El empleado '{empleado}' no se encontró en el calendario maestro.")
+        except Exception as e:
+            print(f"Aviso: Error descargando el calendario maestro: {e}")
+            
+    return holidays
 
 def is_holiday_or_weekend(holidays):
     """Checks if today is a weekend or a holiday."""

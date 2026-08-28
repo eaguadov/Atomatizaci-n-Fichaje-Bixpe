@@ -42,6 +42,7 @@ jobs:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
           NOTIFY_ON_SUCCESS: ${{ vars.NOTIFICAR_EXITOS }}
+          EMPLEADO: ${{ vars.EMPLEADO }}
         run: |
           echo "=== Starting Clock Out at $(date) ==="
           python src/bixpe_bot.py --action END --force
