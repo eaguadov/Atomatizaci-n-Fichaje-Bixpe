@@ -32,8 +32,7 @@ def find_excel_path():
 def get_holiday_reason(cell):
     """Detecta si una celda es festivo/vacaciones leyendo su texto explícito.
     No se usa detección por color porque el Excel colorea los fines de semana
-    de rojo como decoración visual, causando falsos positivos.
-    Los festivos nacionales sin texto están cubiertos por holidays.json local."""
+    de rojo como decoración visual, causando falsos positivos."""
     val = str(cell.value or '').strip().upper()
     
     # Comprobar texto explícito (V, V25, V26, V99... y festivos)
@@ -170,8 +169,7 @@ def main():
         else:
             print("El calendario maestro ya estaba al día en GitHub.")
     except Exception as e:
-        print(f"Aviso durante la sincronización: {e}")
-        print(f"Error al hacer git push: {e}")
+        print(f"Error durante la sincronización con GitHub: {e}")
 
 if __name__ == "__main__":
     main()

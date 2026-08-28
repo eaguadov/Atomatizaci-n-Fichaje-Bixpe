@@ -63,7 +63,7 @@ flowchart TD
 - 🔔 **Sistema Dual Real de Alertas**: Notificaciones coordinadas por Telegram (Markdown) y Email (Gmail SMTP `starttls`).
 - 🤫 **Modo Silencioso y Monitorización**: Integración con Healthchecks.io para omitir notificaciones de éxito diarias, alertando por Telegram únicamente si hay errores o fallos en la infraestructura.
 - 🌴 **Detección Automática de Vacaciones**: Reconoce la pantalla *"Vacaciones en curso"* de Bixpe, omite el fichaje y envía aviso de tranquilidad sin generar errores.
-- 📅 **Control de Festivos y Fines de Semana**: Omisión automática de días festivos (`holidays.json`) y fines de semana.
+- 📅 **Control de Festivos y Fines de Semana**: Omisión automática de días festivos (`team_holidays.json`) y fines de semana.
 - 🛡️ **Prevención de Falsos Positivos**: Triple mecanismo de espera (`networkidle` + espera dinámica de elementos + `wait_for_url`) para asegurar la verificación del estado real.
 - 🧪 **Suite de Pruebas y Diagnóstico de Errores**: Permite simular escenarios de prueba (ciclo completo, contraseña incorrecta, error de red o cambios de interfaz) directamente desde GitHub Actions.
 
@@ -95,7 +95,7 @@ Configúralas en **Settings > Secrets and variables > Actions > Variables**:
 | Variable | Descripción | Valor por defecto | Ejemplo |
 |----------|-------------|-------------------|---------|
 | `NOTIFICAR_EXITOS` | Si se establece en `false`, suprime los avisos diarios de Telegram cuando todo va bien (modo silencioso). | `true` | `false` |
-| `EMPLEADO` | Nombre del empleado (tal como figura en el Excel de la empresa). Permite sincronizar automáticamente festivos y vacaciones desde el calendario maestro `team_holidays.json`. | *(vacío / usa `holidays.json` local)* | `Eusebio` o `Antonio` |
+| `EMPLEADO` | Nombre del empleado (tal como figura en el Excel de la empresa). Permite sincronizar automáticamente festivos y vacaciones desde el calendario maestro `team_holidays.json`. | *(vacío / no se verifican festivos)* | `Eusebio` o `Antonio` |
 
 ---
 
@@ -142,8 +142,10 @@ python src/bixpe_bot.py --action START --simulate
 |----------------------|-------------|
 | `src/bixpe_bot.py` | Script principal de automatización con Playwright |
 | `src/telegram_notifier.py` | Módulo de notificaciones duales (Telegram + Gmail SMTP) |
-| `holidays.json` | Calendario de días festivos y vacaciones |
+| `team_holidays.json` | Calendario maestro centralizado de festivos y vacaciones del equipo |
 | `schedule.json` | Configuración de horarios por tipo de jornada |
+| `Actualizar_Vacaciones.bat` | Lanzador Windows (doble clic) para sincronizar el Excel con GitHub |
+| `scripts/actualizar_vacaciones.py` | Script que lee el Excel corporativo y genera `team_holidays.json` |
 | `.github/workflows/` | Flujos de trabajo de GitHub Actions |
 | `SETUP_GUIA.md` | Guía completa paso a paso para usuarios y forks |
 | `CHANGELOG.md` | Historial de versiones del proyecto |

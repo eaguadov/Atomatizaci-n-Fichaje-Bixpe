@@ -132,18 +132,8 @@ https://api.github.com/repos/TU_USUARIO/Atomatizaci-n-Fichaje-Bixpe/dispatches
 
 ## 🌴 Paso 6: Gestión de Vacaciones y Festivos
 
-### Días de Vacaciones / Festivos Locales (`holidays.json`)
-Edita el archivo `holidays.json` en tu fork para incluir las fechas donde NO deseas fichar:
-
-```json
-[
-  "2026-01-01",
-  "2026-08-15",
-  "2026-12-25",
-  "2026-07-15",
-  "2026-07-16"
-]
-```
+### Días de Vacaciones / Festivos Locales (`team_holidays.json`)
+Los festivos y vacaciones de todo el equipo se gestionan de forma centralizada a través del archivo maestro `team_holidays.json`. Consulta el **Paso 8** para configurar tu variable `EMPLEADO` y recibir automáticamente los días libres desde el calendario corporativo.
 
 ### Vacaciones Registradas en la Web de Bixpe
 Si estás de vacaciones y Bixpe muestra el mensaje *"Vacaciones en curso"*, el bot lo detecta automáticamente, omite el fichaje sin dar error y te envía una notificación de tranquilidad: `🌴 Fichaje Bixpe Omitido (Vacaciones)`.
@@ -172,7 +162,7 @@ De esta forma, si el fichaje va bien, el bot guardará silencio en Telegram, per
 
 ## 🏖️ Paso 8: Sincronización Automática de Vacaciones del Equipo
 
-Ya no es necesario que edites a mano los festivos ni las vacaciones en el archivo `holidays.json`. El proyecto cuenta con un calendario maestro (`team_holidays.json`) sincronizado con el Excel corporativo:
+El proyecto cuenta con un calendario maestro centralizado (`team_holidays.json`) sincronizado con el Excel corporativo. Para activarlo en tu fork:
 
 1. Ve a **Settings > Secrets and variables > Actions > Variables**.
 2. Crea una nueva variable llamada **`EMPLEADO`**.
