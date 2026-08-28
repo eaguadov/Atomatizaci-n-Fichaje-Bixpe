@@ -16,8 +16,8 @@ def is_holiday(cell):
     """Detecta si una celda es festivo/vacaciones leyendo su texto o su color de fondo rojo."""
     val = str(cell.value).strip().upper()
     
-    # Comprobar texto
-    if val in ['V', 'V25', 'V26', 'V27', 'FL', 'FA', 'F']:
+    # Comprobar texto (V, V25, V26, V99... y festivos)
+    if val == 'V' or (val.startswith('V') and val[1:].isdigit()) or val in ['FL', 'FA', 'F']:
         return True
         
     # Comprobar color de fondo rojo
