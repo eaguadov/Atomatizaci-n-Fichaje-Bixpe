@@ -9,8 +9,25 @@ except ImportError:
     print("La librería 'openpyxl' no está instalada. Ejecuta en tu consola: pip install openpyxl")
     exit(1)
 
-EXCEL_PATH = r"C:\Users\eusebio.aguado\Tower Consultores SL\Proyecto RSSI - Documentos\General\Vacaciones RSSI.xlsx"
+DEFAULT_DIR = r"C:\Users\eusebio.aguado\Tower Consultores SL\Proyecto RSSI - Documentos\General"
 OUTPUT_JSON = "team_holidays.json"
+
+def find_excel_path():
+    """Busca el archivo de vacaciones soportando .xlsm o .xlsx"""
+    candidatos = [
+        os.path.join(DEFAULT_DIR, "Vacaciones RSSI.xlsm"),
+        os.path.join(DEFAULT_DIR, "Vacaciones RSSI.xlsx"),
+    ]
+    for c in candidatos:
+        if os.path.exists(c):
+            return c
+            
+    # Búsqueda dinámica en el directorio por si cambia el nombre ligeramente
+    if os.path.exists(DEFAULT_DIR):
+        for f in os.listdir(DEFAULT_DIR):
+            if f.lower().startswith("vacaciones") and (f.endswith(".xlsx") or f.endswith(".xlsm")):
+                return os.path.join(DEFAULT_DIR, f)
+    return None
 
 def is_holiday(cell):
     """Detecta si una celda es festivo/vacaciones leyendo su texto o su color de fondo rojo."""
@@ -41,12 +58,14 @@ def get_month_number(text):
     return None
 
 def main():
-    print(f"Cargando Excel desde: {EXCEL_PATH}")
-    if not os.path.exists(EXCEL_PATH):
-        print("ERROR: Archivo no encontrado. ¿Estás conectado a la VPN / OneDrive?")
+    excel_path = find_excel_path()
+    if not excel_path:
+        print(f"ERROR: No se encontró ningún archivo de vacaciones (.xlsm o .xlsx) en:\n{DEFAULT_DIR}")
+        print("¿Estás conectado a la VPN / OneDrive?")
         return
 
-    wb = load_workbook(EXCEL_PATH, data_only=True)
+    print(f"Cargando Excel desde: {excel_path}")
+    wb = load_workbook(excel_path, data_only=True)
     current_year = datetime.datetime.now().year
     years_to_check = [str(current_year), str(current_year + 1)]
 
