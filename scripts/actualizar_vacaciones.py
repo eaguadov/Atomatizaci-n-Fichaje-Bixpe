@@ -106,6 +106,11 @@ def main():
                             if 1 <= day <= 31:
                                 try:
                                     date_obj = datetime.date(int(year_str), month_num, day)
+                                    
+                                    # Omitir fines de semana (Sábado=5, Domingo=6)
+                                    if date_obj.weekday() >= 5:
+                                        continue
+                                        
                                     target_cell = ws.cell(row=er, column=c)
                                     reason = get_holiday_reason(target_cell)
                                     
