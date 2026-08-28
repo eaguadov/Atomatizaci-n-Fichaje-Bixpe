@@ -30,26 +30,15 @@ def find_excel_path():
     return None
 
 def get_holiday_reason(cell):
-    """Detecta si una celda es festivo/vacaciones y devuelve el código (V, V25, FL, FA, F...) o motivo."""
+    """Detecta si una celda es festivo/vacaciones leyendo su texto explícito.
+    No se usa detección por color porque el Excel colorea los fines de semana
+    de rojo como decoración visual, causando falsos positivos.
+    Los festivos nacionales sin texto están cubiertos por holidays.json local."""
     val = str(cell.value or '').strip().upper()
     
-    # 1. Comprobar texto explícito (V, V25, V26, V99... y festivos)
+    # Comprobar texto explícito (V, V25, V26, V99... y festivos)
     if val == 'V' or (val.startswith('V') and val[1:].isdigit()) or val in ['FL', 'FA', 'F']:
         return val
-        
-    # 2. Comprobar color de fondo rojo real (solo con relleno sólido)
-    if cell.fill and getattr(cell.fill, 'fill_type', None) == 'solid':
-        color = cell.fill.start_color
-        if color:
-            color_index = str(getattr(color, 'index', '') or '').upper()
-            color_rgb = str(getattr(color, 'rgb', '') or '').upper()
-            
-            # Solo si el RGB es rojo puro o rojo oscuro estándar
-            if 'FF0000' in color_rgb or color_rgb in ['FFFF0000', 'FF0000', 'FFC00000']:
-                return "F"
-            # O si el índice indexed es exactamente 2 en temas clásicos
-            if getattr(color, 'type', None) == 'indexed' and color_index == '2':
-                return "F"
             
     return None
 
