@@ -85,7 +85,14 @@ def main():
         return
 
     print(f"Cargando Excel desde: {excel_path}")
-    wb = load_workbook(excel_path, data_only=True)
+    try:
+        wb = load_workbook(excel_path, data_only=True)
+    except PermissionError:
+        print("\n" + "="*56)
+        print("  AVISO: El archivo Excel está abierto en tu ordenador.")
+        print("  Por favor, GUARDA y CIERRA Microsoft Excel.")
+        print("="*56 + "\n")
+        return
     current_year = datetime.datetime.now().year
     years_to_check = [str(current_year), str(current_year + 1)]
 
