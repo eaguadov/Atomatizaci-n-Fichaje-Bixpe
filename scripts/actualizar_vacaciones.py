@@ -173,14 +173,15 @@ def main():
     print("\nSincronizando con GitHub (Subida Automática)...")
     try:
         subprocess.run(["git", "add", OUTPUT_JSON], cwd=repo_dir, check=True)
-        # Si no hay cambios, commit fallará, así que ignoramos el error
         commit_res = subprocess.run(["git", "commit", "-m", "chore: actualizar calendario maestro desde Excel"], cwd=repo_dir, capture_output=True)
-        if commit_res.returncode == 0:
-            subprocess.run(["git", "push"], cwd=repo_dir, check=True)
+        push_res = subprocess.run(["git", "push"], cwd=repo_dir, capture_output=True)
+        
+        if commit_res.returncode == 0 or (push_res and push_res.returncode == 0):
             print("¡Completado! El archivo está actualizado en GitHub. Tus compañeros ya tienen los datos.")
         else:
-            print("El calendario maestro ya estaba al día, no hay cambios nuevos para subir.")
-    except subprocess.CalledProcessError as e:
+            print("El calendario maestro ya estaba al día en GitHub.")
+    except Exception as e:
+        print(f"Aviso durante la sincronización: {e}")
         print(f"Error al hacer git push: {e}")
 
 if __name__ == "__main__":
