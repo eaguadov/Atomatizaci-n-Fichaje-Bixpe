@@ -38,41 +38,33 @@ try:
 except ImportError:
     pass # In CI/CD dotenv might not be needed/installed, or managed differently
 
-def load_holidays(json_path):
-    """Loads holidays from local file and team_holidays from GitHub."""
+def load_holidays():
+    """Carga los festivos/vacaciones del empleado desde el archivo maestro en GitHub."""
     holidays = []
     
-    # 1. Fallback: Local holidays.json
-    try:
-        with open(json_path, 'r') as f:
-            local = json.load(f)
-            if isinstance(local, list):
-                holidays.extend(local)
-    except FileNotFoundError:
-        pass
-
-    # 2. Archivo Maestro: team_holidays.json desde GitHub
     empleado = os.environ.get("EMPLEADO", "").strip()
-    if empleado:
-        try:
-            import urllib.request
-            # Lee el RAW desde tu repositorio principal
-            url = "https://raw.githubusercontent.com/eaguadov/Atomatizaci-n-Fichaje-Bixpe/main/team_holidays.json"
-            req = urllib.request.Request(url)
-            with urllib.request.urlopen(req, timeout=10) as response:
-                if response.status == 200:
-                    team_data = json.loads(response.read().decode('utf-8'))
-                    if empleado in team_data:
-                        emp_holidays = team_data[empleado]
-                        if isinstance(emp_holidays, dict):
-                            holidays.extend(emp_holidays.keys())
-                        elif isinstance(emp_holidays, list):
-                            holidays.extend(emp_holidays)
-                        print(f"Festivos de {empleado} sincronizados desde el archivo maestro.")
-                    else:
-                        print(f"Aviso: El empleado '{empleado}' no se encontró en el calendario maestro.")
-        except Exception as e:
-            print(f"Aviso: Error descargando el calendario maestro: {e}")
+    if not empleado:
+        print("Aviso: Variable EMPLEADO no configurada. No se verificarán festivos personalizados.")
+        return holidays
+
+    try:
+        import urllib.request
+        url = "https://raw.githubusercontent.com/eaguadov/Atomatizaci-n-Fichaje-Bixpe/main/team_holidays.json"
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req, timeout=10) as response:
+            if response.status == 200:
+                team_data = json.loads(response.read().decode('utf-8'))
+                if empleado in team_data:
+                    emp_holidays = team_data[empleado]
+                    if isinstance(emp_holidays, dict):
+                        holidays.extend(emp_holidays.keys())
+                    elif isinstance(emp_holidays, list):
+                        holidays.extend(emp_holidays)
+                    print(f"Festivos de {empleado} sincronizados desde el archivo maestro ({len(holidays)} días).")
+                else:
+                    print(f"Aviso: El empleado '{empleado}' no se encontró en el calendario maestro.")
+    except Exception as e:
+        print(f"Aviso: Error descargando el calendario maestro: {e}")
             
     return holidays
 
@@ -546,9 +538,8 @@ if __name__ == "__main__":
     # Unify simulation flags
     is_simulation = args.simulate or args.dry_run
 
-    # Load holidays
-    holidays_file = os.path.join(os.path.dirname(__file__), "..", "holidays.json")
-    holidays = load_holidays(holidays_file)
+    # Cargar festivos desde el archivo maestro en GitHub
+    holidays = load_holidays()
 
     # ALWAYS check holidays/weekends (even with --force)
     # --force only skips schedule/time checks, not holiday checks
