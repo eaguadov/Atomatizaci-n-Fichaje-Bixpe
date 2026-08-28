@@ -489,8 +489,12 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
     # Success Screenshot
     page.screenshot(path=f"screenshot_{action}_{time.strftime('%Y%m%d_%H%M%S')}.png")
     
-    # Notify Success or Simulation via Telegram
-    notify_success(action, is_simulation=dry_run)
+    # Notify Success or Simulation via Telegram (silenced if NOTIFY_ON_SUCCESS is false)
+    notify_on_success = str(os.environ.get("NOTIFY_ON_SUCCESS", "true")).lower() == "true"
+    if notify_on_success:
+        notify_success(action, is_simulation=dry_run)
+    else:
+        print(f"Modo silencioso activado. Omitiendo notificación de éxito por Telegram para la acción {action}.")
 
     # Cleanup resources
     try:

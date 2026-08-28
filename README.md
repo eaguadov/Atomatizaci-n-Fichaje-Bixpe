@@ -24,6 +24,7 @@ Script de automatización para fichar entrada/salida y pausas en la plataforma *
 
 - ✅ **Fichaje Automático Completo**: Entrada (`START`), Inicio Pausa (`PAUSE`), Fin Pausa (`RESUME`) y Salida (`END`).
 - 🔔 **Sistema Dual Real de Alertas**: Notificaciones coordinadas por Telegram (Markdown) y Email (Gmail SMTP `starttls`).
+- 🤫 **Modo Silencioso y Monitorización**: Integración con Healthchecks.io para omitir notificaciones de éxito diarias, alertando por Telegram únicamente si hay errores o fallos en la infraestructura.
 - 🌴 **Detección Automática de Vacaciones**: Reconoce la pantalla *"Vacaciones en curso"* de Bixpe, omite el fichaje y envía aviso de tranquilidad sin generar errores.
 - 📅 **Control de Festivos y Fines de Semana**: Omisión automática de días festivos (`holidays.json`) y fines de semana.
 - 🛡️ **Prevención de Falsos Positivos**: Triple mecanismo de espera (`networkidle` + 10s estabilidad + `wait_for_url`) para asegurar la verificación del estado real.

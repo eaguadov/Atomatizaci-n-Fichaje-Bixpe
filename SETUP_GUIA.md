@@ -148,9 +148,29 @@ Edita el archivo `holidays.json` en tu fork para incluir las fechas donde NO des
 ### Vacaciones Registradas en la Web de Bixpe
 Si estás de vacaciones y Bixpe muestra el mensaje *"Vacaciones en curso"*, el bot lo detecta automáticamente, omite el fichaje sin dar error y te envía una notificación de tranquilidad: `🌴 Fichaje Bixpe Omitido (Vacaciones)`.
 
+## 🤫 Paso 7: Modo Silencioso y Vigilante de Caídas (Opcional)
+
+Si deseas recibir alertas **sólo cuando hay un error** y evitar los mensajes de éxito diarios:
+
+1. Ve a **Settings > Secrets and variables > Actions > Variables** (Ojo, pestaña *Variables*, no Secrets).
+2. Crea una variable llamada `NOTIFICAR_EXITOS` y ponle el valor `false`.
+
+**Monitorización de Infraestructura (Healthchecks.io)**
+Al silenciar los éxitos, necesitas asegurarte de que el sistema se está ejecutando (por si falla GitHub o cron-job). Para ello, integramos un "vigilante":
+1. Crea una cuenta gratuita en [Healthchecks.io](https://healthchecks.io) y vincula tu Telegram en la pestaña *Integrations*.
+2. Crea 4 Checks (Entrada, Inicio Pausa, Fin Pausa, Salida) configurados con tu horario y 10 minutos de gracia.
+3. Copia sus *Ping URLs* únicas.
+4. Añádelas como **Secrets** en tu repositorio GitHub con estos nombres exactos:
+   - `HC_URL_START`
+   - `HC_URL_PAUSE`
+   - `HC_URL_RESUME`
+   - `HC_URL_END`
+
+De esta forma, si el fichaje va bien, el bot guardará silencio en Telegram, pero enviará un toque interno a Healthchecks. Si el bot ni siquiera llega a arrancar o se cae internet, Healthchecks se dará cuenta y te avisará por Telegram.
+
 ---
 
-## 🧪 Paso 7: Pruebas Manuales y Simulación de Errores
+## 🧪 Paso 8: Pruebas Manuales y Simulación de Errores
 
 Puedes realizar pruebas manuales directamente desde la interfaz web de GitHub Actions:
 

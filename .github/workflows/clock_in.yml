@@ -41,10 +41,23 @@ jobs:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+          NOTIFY_ON_SUCCESS: ${{ vars.NOTIFICAR_EXITOS }}
         run: |
           echo "=== Starting Clock In at $(date) ==="
           python src/bixpe_bot.py --action START --force
           echo "=== Finished Clock In at $(date) ==="
+
+      - name: Notificar a Healthchecks (Entrada)
+        if: success()
+        env:
+          HC_URL: ${{ secrets.HC_URL_START }}
+        run: |
+          if [ -n "$HC_URL" ]; then
+            curl -fsS -m 10 --retry 5 -o /dev/null "$HC_URL"
+            echo "Ping enviado a Healthchecks."
+          else
+            echo "HC_URL_START no está configurado. Omitiendo ping."
+          fi
 
       - name: Upload Screenshots
         if: always()
