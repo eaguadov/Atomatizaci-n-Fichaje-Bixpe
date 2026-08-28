@@ -88,12 +88,23 @@ En **Settings > Secrets and variables > Actions**:
 | `HC_URL_RESUME` | *(Opcional)* URL de ping de Healthchecks para Fin Pausa | Vigilante Healthchecks |
 | `HC_URL_END` | *(Opcional)* URL de ping de Healthchecks para Salida | Vigilante Healthchecks |
 
-### 🎛️ Variables del Repositorio (Pestaña Variables)
-| Variable | Valor por defecto | Descripción |
-|----------|-------------------|-------------|
-| `NOTIFICAR_EXITOS` | `true` | Si se establece en `false`, desactiva los mensajes de éxito diarios por Telegram (Modo Silencioso). |
+### 🎛️ Variables de Repositorio (Opcionales / Personalización)
+
+Configúralas en **Settings > Secrets and variables > Actions > Variables**:
+
+| Variable | Descripción | Valor por defecto | Ejemplo |
+|----------|-------------|-------------------|---------|
+| `NOTIFICAR_EXITOS` | Si se establece en `false`, suprime los avisos diarios de Telegram cuando todo va bien (modo silencioso). | `true` | `false` |
+| `EMPLEADO` | Nombre del empleado (tal como figura en el Excel de la empresa). Permite sincronizar automáticamente festivos y vacaciones desde el calendario maestro `team_holidays.json`. | *(vacío / usa `holidays.json` local)* | `Eusebio` o `Antonio` |
 
 ---
+
+## 🏖️ Sincronización Automática de Vacaciones (Excel -> GitHub)
+
+El repositorio incluye un sistema para sincronizar las vacaciones de todo el equipo directamente desde el Excel corporativo:
+* **`Actualizar_Vacaciones.bat`**: Lanzador para Windows (doble clic). Lee el Excel de la unidad compartida y actualiza el archivo maestro en GitHub.
+* **`team_holidays.json`**: Archivo maestro centralizado con el calendario de todo el equipo etiquetado (`V`, `V25`, `FL`, `FA`, `F`).
+* **Compañeros / Forks**: Solo deben configurar su variable `EMPLEADO` con su nombre exacto en GitHub y sincronizar su fork. El bot leerá los festivos en tiempo real.
 
 ## 📖 Guía Paso a Paso para Nuevos Usuarios
 

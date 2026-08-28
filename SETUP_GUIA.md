@@ -170,7 +170,20 @@ De esta forma, si el fichaje va bien, el bot guardará silencio en Telegram, per
 
 ---
 
-## 🧪 Paso 8: Pruebas Manuales y Simulación de Errores
+## 🏖️ Paso 8: Sincronización Automática de Vacaciones del Equipo
+
+Ya no es necesario que edites a mano los festivos ni las vacaciones en el archivo `holidays.json`. El proyecto cuenta con un calendario maestro (`team_holidays.json`) sincronizado con el Excel corporativo:
+
+1. Ve a **Settings > Secrets and variables > Actions > Variables**.
+2. Crea una nueva variable llamada **`EMPLEADO`**.
+3. En el valor, escribe tu nombre **exactamente** como aparece en el Excel de la empresa (por ejemplo: `Antonio`, `Carlos`, `Oscar`, `Eusebio`).
+4. *(Importante para Forks)*: Dale periódicamente al botón **"Sync Fork"** en la página principal de tu repositorio para heredar las últimas actualizaciones que se suban al calendario maestro.
+
+El bot consultará automáticamente tu lista de días libres antes de fichar y cancelará la jornada cuando estés de descanso o festivo.
+
+---
+
+## 🧪 Paso 9: Pruebas Manuales y Simulación de Errores
 
 Puedes realizar pruebas manuales directamente desde la interfaz web de GitHub Actions:
 
