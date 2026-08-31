@@ -9,11 +9,12 @@ except ImportError:
     print("La librería 'openpyxl' no está instalada. Ejecuta en tu consola: pip install openpyxl")
     exit(1)
 
-DEFAULT_DIR = r"C:\Users\eusebio.aguado\Tower Consultores SL\Proyecto RSSI - Documentos\General"
+USER_HOME = os.path.expanduser("~")
+DEFAULT_DIR = os.path.join(USER_HOME, "Tower Consultores SL", "Proyecto RSSI - Documentos", "General")
 OUTPUT_JSON = "team_holidays.json"
 
 def find_excel_path():
-    """Busca el archivo de vacaciones soportando .xlsm o .xlsx"""
+    """Busca el archivo de vacaciones soportando .xlsm o .xlsx de forma dinámica para cualquier usuario"""
     candidatos = [
         os.path.join(DEFAULT_DIR, "Vacaciones RSSI.xlsm"),
         os.path.join(DEFAULT_DIR, "Vacaciones RSSI.xlsx"),

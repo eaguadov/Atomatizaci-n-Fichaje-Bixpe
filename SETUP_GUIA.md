@@ -167,7 +167,10 @@ El proyecto cuenta con un calendario maestro centralizado (`team_holidays.json`)
 1. Ve a **Settings > Secrets and variables > Actions > Variables**.
 2. Crea una nueva variable llamada **`EMPLEADO`**.
 3. En el valor, escribe tu nombre **exactamente** como aparece en el Excel de la empresa (por ejemplo: `Antonio`, `Carlos`, `Oscar`, `Eusebio`).
-4. *(Importante para Forks)*: Dale periódicamente al botón **"Sync Fork"** en la página principal de tu repositorio para heredar las últimas actualizaciones que se suban al calendario maestro.
+
+**¿Cómo actualizar las vacaciones? (Tienes 2 opciones):**
+* **Opción A (Autónoma - Lanzador en tu PC):** Si clonas el repositorio en tu ordenador del trabajo, puedes hacer doble clic en **`Actualizar_Vacaciones.bat`** (o crearle un acceso directo en tu escritorio). El script leerá el Excel de la empresa y actualizará tu propio repositorio de GitHub al instante.
+* **Opción B (Sin instalar nada - Sync Fork):** Cuando el responsable del proyecto actualice el calendario global, solo tienes que entrar a tu GitHub y pulsar el botón **"Sync Fork" > "Update branch"**.
 
 El bot consultará automáticamente tu lista de días libres antes de fichar y cancelará la jornada cuando estés de descanso o festivo.
 

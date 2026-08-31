@@ -49,22 +49,37 @@ def load_holidays():
 
     try:
         import urllib.request
-        url = "https://raw.githubusercontent.com/eaguadov/Atomatizaci-n-Fichaje-Bixpe/main/team_holidays.json"
-        req = urllib.request.Request(url)
-        with urllib.request.urlopen(req, timeout=10) as response:
-            if response.status == 200:
-                team_data = json.loads(response.read().decode('utf-8'))
-                if empleado in team_data:
-                    emp_holidays = team_data[empleado]
-                    if isinstance(emp_holidays, dict):
-                        holidays.extend(emp_holidays.keys())
-                    elif isinstance(emp_holidays, list):
-                        holidays.extend(emp_holidays)
-                    print(f"Festivos de {empleado} sincronizados desde el archivo maestro ({len(holidays)} días).")
-                else:
-                    print(f"Aviso: El empleado '{empleado}' no se encontró en el calendario maestro.")
+        github_repo = os.environ.get("GITHUB_REPOSITORY", "eaguadov/Atomatizaci-n-Fichaje-Bixpe").strip()
+        urls_to_try = [
+            f"https://raw.githubusercontent.com/{github_repo}/main/team_holidays.json"
+        ]
+        if github_repo.lower() != "eaguadov/atomatizaci-n-fichaje-bixpe":
+            urls_to_try.append("https://raw.githubusercontent.com/eaguadov/Atomatizaci-n-Fichaje-Bixpe/main/team_holidays.json")
+
+        team_data = None
+        for url in urls_to_try:
+            try:
+                req = urllib.request.Request(url)
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    if response.status == 200:
+                        team_data = json.loads(response.read().decode('utf-8'))
+                        break
+            except Exception:
+                continue
+
+        if team_data and empleado in team_data:
+            emp_holidays = team_data[empleado]
+            if isinstance(emp_holidays, dict):
+                holidays.extend(emp_holidays.keys())
+            elif isinstance(emp_holidays, list):
+                holidays.extend(emp_holidays)
+            print(f"Festivos de {empleado} sincronizados desde el archivo maestro ({len(holidays)} días).")
+        elif team_data:
+            print(f"Aviso: El empleado '{empleado}' no se encontró en el calendario maestro.")
+        else:
+            print(f"Aviso: No se pudo descargar el calendario maestro desde GitHub.")
     except Exception as e:
-        print(f"Aviso: Error descargando el calendario maestro: {e}")
+        print(f"Aviso: Error durante la descarga del calendario maestro: {e}")
             
     return holidays
 
