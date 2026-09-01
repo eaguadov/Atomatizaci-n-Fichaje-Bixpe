@@ -281,7 +281,11 @@ def run_automation(email, password, action, headless=True, dry_run=False, target
                 if ("vacaciones en curso" in visible_text or "estarás de vacaciones" in visible_text) and not test_missing_button:
                     print("🌴 [BIXPE] Detectado: 'Vacaciones en curso' en el texto visible de Bixpe.")
                     page.screenshot(path=f"vacaciones_{action}_{time.strftime('%Y%m%d_%H%M%S')}.png")
-                    notify_vacation(action)
+                    notify_on_success = str(os.environ.get("NOTIFY_ON_SUCCESS", "true")).lower() == "true"
+                    if notify_on_success:
+                        notify_vacation(action)
+                    else:
+                        print("Modo silencioso activado. Omitiendo notificación de vacaciones por Telegram.")
                     browser.close()
                     p.stop()
                     sys.exit(0)
@@ -560,7 +564,11 @@ if __name__ == "__main__":
     # --force only skips schedule/time checks, not holiday checks
     if is_holiday_or_weekend(holidays):
         print("Exiting: Today is a holiday or weekend.")
-        notify_holiday_or_weekend("Fin de semana o festivo programado")
+        notify_on_success = str(os.environ.get("NOTIFY_ON_SUCCESS", "true")).lower() == "true"
+        if notify_on_success:
+            notify_holiday_or_weekend("Fin de semana o festivo programado")
+        else:
+            print("Modo silencioso activado. Omitiendo notificación de festivo por Telegram.")
         sys.exit(0)
 
     # Load Schedule
